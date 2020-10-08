@@ -1,10 +1,17 @@
 import arcade as ar
-import random
+import time
+
+
 SCREEN_HEIGHT = 600
 SCREEN_WIDTH = 800
+SCREEN_TITLE = "Color seeker!"
 SCALING = 1
 SPRITE_SCALING = 0.3
 TILE_SPRITE_SCALING = 0.5
+DEFAULT_COLOR = [255,255,255,255]
+RED_COLOR = [255,0,0,255]
+DAMAGE_BUFFER_TIME = 1000 # time in milliseconds until player may take damage again
+
 
 WINDOW_TITLE = "Cool Game!"
 PLAYER_SPRITE="sprites/greenguy_walking"
@@ -16,8 +23,8 @@ GRAVITY = 0.5
 JUMP_SPEED = 9
 MOVEMENT_SPEED = 4
 
-VIEWPORT_MARGIN_TOP = 30
-VIEWPORT_MARGIN_BOTTOM = 60
+VIEWPORT_MARGIN_TOP = 100
+VIEWPORT_MARGIN_BOTTOM = 100
 VIEWPORT_RIGHT_MARGIN = 400
 VIEWPORT_LEFT_MARGIN = 200
 
@@ -41,6 +48,10 @@ class PlayerCharacter(ar.Sprite):
         self.character_face_direction = RIGHT_FACING
         self.cur_texture = 0
         self.spawnpoint = [0,0]
+        self.health = 0
+        self.color = [0,0,0,0] # color is RGBA, 4th int being opacity between 0-255
+        self.took_damage = False
+        self.time_last_hit = 0
 
         self.jumping = False
         self.scale = SPRITE_SCALING
@@ -116,19 +127,70 @@ class Enemy(ar.Sprite):
             self.cur_texture = 0
         self.texture = self.walking_textures[self.cur_texture // UPDATES_PER_FRAME][self.character_face_direction]
 
+class InstructionView(ar.View):
+    """
+    View to show instructions
+    Displays an Arcade View window to show an instructions view
+    """
 
+    def on_show(self):
+        """ This is run once when we switch to this view """
+        ar.set_background_color(ar.csscolor.DARK_SLATE_BLUE)
 
-class Game(ar.Window):
+        # Reset the viewport, necessary if we have a scrolling game and we need
+        # to reset the viewport back to the start so we can see what we draw.
+        ar.set_viewport(0, SCREEN_WIDTH - 1, 0, SCREEN_HEIGHT - 1)
+
+    def on_draw(self):
+        """ Draw this view """
+        ar.start_render()
+        ar.draw_text("Use arrow keys or WASD to move", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2,
+                         ar.color.WHITE, font_size=40, anchor_x="center")
+        ar.draw_text("Click to advance", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2-75,
+                         ar.color.WHITE, font_size=20, anchor_x="center")
+
+    def on_mouse_press(self, _x, _y, _button, _modifiers):
+        """ If the user presses the mouse button, start the game. """
+        game_view = GameView()
+        game_view.setup()
+        self.window.show_view(game_view)
+
+class PauseView(ar.View):
+    """ View to show the pause screen """
+
+    def on_show(self):
+        """ This is run once when we switch to this view """
+        ar.set_background_color(ar.csscolor.AQUAMARINE)
+
+        # Reset the viewport, necessary if we have a scrolling game and we need
+        # to reset the viewport back to the start so we can see what we draw.
+        ar.set_viewport(0, SCREEN_WIDTH - 1, 0, SCREEN_HEIGHT - 1)
+
+    def on_draw(self):
+        """ Draw this view """
+        ar.start_render()
+        ar.draw_text("Game Paused", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2,
+                         ar.color.WHITE, font_size=40, anchor_x="center")
+        ar.draw_text("Press P to resume game", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2-75,
+                         ar.color.WHITE, font_size=20, anchor_x="center")
+
+    def on_key_press(self, symbol: int, modifiers: int):
+        """ If the user presses the mouse button, start the game. """
+        if symbol == ar.key.P:
+            game_view = GameView()
+            self.window.show_view(game_view)
+
+class GameView(ar.View):
     """
     Main game window
     Player moves and jumps across platforms and avoids dangerous enemies
 
     """
 
-    def __init__(self, width, height, title):
+    def __init__(self):
         """Initialize the game
         """
-        super().__init__(width, height, title)
+        super().__init__()
 
         # Set up the empty sprite lists
         self.player_list = None
@@ -157,8 +219,10 @@ class Game(ar.Window):
         self.player = PlayerCharacter()
         self.player.center_y = 200
         self.player.center_x = 200
+        self.player.health = 99
         self.player.spawnpoint = self.player.center_x, self.player.center_y
         self.player.left = 10
+        self.player.color = DEFAULT_COLOR
         self.player_list.append(self.player)
 
         self.load_level(self.level)
@@ -182,9 +246,9 @@ class Game(ar.Window):
                                                              self.wall_list,
                                                              gravity_constant=GRAVITY)
         self.enemies_list = ar.tilemap.process_layer(my_map,
-                                                  layer_name='Enemies',
-                                                  scaling=TILE_SPRITE_SCALING,
-                                                  use_spatial_hash=True)
+                                                      layer_name='Enemies',
+                                                      scaling=TILE_SPRITE_SCALING,
+                                                      use_spatial_hash=True)
         self.view_left = 0
         spawn_coords = ar.get_tilemap_layer(map_object=my_map, layer_path="Player Spawn")
         self.view_bottom = 0
@@ -209,6 +273,8 @@ class Game(ar.Window):
         # pause game
         if symbol == ar.key.P:
             self.paused = not self.paused
+            view = PauseView()
+            self.window.show_view(view)
 
         # move up
         if symbol == ar.key.W or symbol == ar.key.UP:
@@ -251,19 +317,39 @@ class Game(ar.Window):
         self.all_sprites.update()
         self.enemies_list.update()
 
-        if ar.check_for_collision_with_list(self.player,
-                                                self.enemies_list):
+        if self.player.took_damage == True:
+            current_time = int(round(time.time() * 1000))
+            if (current_time - self.player.time_last_hit) > DAMAGE_BUFFER_TIME:
+                self.player.took_damage = False
+                self.player.color = DEFAULT_COLOR
+                self.player.change_x = 0
+                self.player.change_y = 0
+
+        if (self.player.took_damage is False) and \
+                (ar.check_for_collision_with_list(self.player, self.enemies_list)):  # if player hits enemy, deduce health and knock them back
+            self.player.change_x = -5 # bounce player back
+            self.player.change_y = 5 # player jumps up a bit
+            self.player.health -= 20 # reduce health
+            self.player.took_damage = True # indicate that the player just got hit (so there is a
+                                    # buffer until player can take damage again)
+            self.player.color = RED_COLOR #tint the player red
+            self.player.time_last_hit = int(round(time.time() * 1000))
+
+        if self.player.health <= 0: # if player dies (runs out of health), respawn at the beginning of the level
             self.player.change_x = 0
             self.player.change_y = 0
             self.player.center_x, self.player.center_y = self.player.spawnpoint
+            self.player.health = 99
 
-        if self.player.right >= self.end_of_map:
-            self.load_level(self.level + 1)
+        if self.player.right >= self.end_of_map: # if player gets to the right edge of the level, go to next level
+            self.level += 1 # switch to next level
+            self.load_level(self.level)
             self.player.spawnpoint = [64,64]
             self.player.center_x, self.player.center_y = self.player.spawnpoint
 
         if self.player.bottom <= 0:
-            self.load_level(self.level + 1)
+            self.level += 1 # switch to next level
+            self.load_level(self.level)
             self.player.center_x, self.player.center_y = self.player.spawnpoint
 
         # Keep the player on screen, within the confines of the map
@@ -324,8 +410,10 @@ class Game(ar.Window):
         self.enemies_list.draw()
         msg = self.end_of_map
         msg2 = self.player.center_x
+        msg3 = self.player.health
         output = f"Map width: {msg:.2f}"
         output2 = f"Player x pos: {msg2:.2f}"
+        output3 = f"HP: {msg3:.2f}"
         ar.draw_text(text=output,
                      start_x=self.view_left + (SCREEN_WIDTH - 150),
                      start_y=self.view_bottom + (SCREEN_HEIGHT - 25),
@@ -334,10 +422,18 @@ class Game(ar.Window):
                      start_x=self.view_left + (SCREEN_WIDTH - 175),
                      start_y=self.view_bottom + (SCREEN_HEIGHT - 40),
                      color=ar.color.WHITE)
+        ar.draw_text(text=output3,
+                     start_x=self.view_left + (SCREEN_WIDTH - 125),
+                     start_y=self.view_bottom + (SCREEN_HEIGHT - 55),
+                     color=ar.color.WHITE)
 
 if __name__ == '__main__':
-    new_game = Game(int(SCREEN_WIDTH * SCALING), int(SCREEN_HEIGHT * SCALING), WINDOW_TITLE)
-    new_game.setup()
+    # new_game = Game(int(SCREEN_WIDTH * SCALING), int(SCREEN_HEIGHT * SCALING), WINDOW_TITLE)
+    # new_game.setup()
+
+    window = ar.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+    start_view = InstructionView()
+    window.show_view(start_view)
     ar.run()
     # ar.open_window(width=SCREEN_WIDTH, height=SCREEN_HEIGHT, window_title=WINDOW_TITLE, resizable=False)
     # ar.set_background_color(ar.color.BLACK)
