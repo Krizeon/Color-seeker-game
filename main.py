@@ -11,15 +11,15 @@ PLAYER_SPRITE="sprites/greenguy_walking"
 
 LEFT_FACING = 1
 RIGHT_FACING = 0
-UPDATES_PER_FRAME = 4
+UPDATES_PER_FRAME = 5
 GRAVITY = 0.5
 JUMP_SPEED = 9
 MOVEMENT_SPEED = 4
 
-VIEWPORT_MARGIN_TOP = 60
-VIEWPORT_MARGIN_BOTTOM = 30
-VIEWPORT_RIGHT_MARGIN = 250
-VIEWPORT_LEFT_MARGIN = 250
+VIEWPORT_MARGIN_TOP = 30
+VIEWPORT_MARGIN_BOTTOM = 60
+VIEWPORT_RIGHT_MARGIN = 400
+VIEWPORT_LEFT_MARGIN = 200
 
 def load_texture_pair(filename):
     """
@@ -75,13 +75,54 @@ class PlayerCharacter(ar.Sprite):
             self.cur_texture = 0
         self.texture = self.walking_textures[self.cur_texture // UPDATES_PER_FRAME][self.character_face_direction]
 
+class Enemy(ar.Sprite):
+    def __init__(self):
+        # set up parent class
+        super().__init__()
+        self.character_face_direction = LEFT_FACING
+        self.cur_texture = 0
+        self.spawnpoint = [0,0]
+
+        self.jumping = False
+        self.scale = SPRITE_SCALING
+
+        main_path = "sprites/greenguy_walking"
+        self.idle_texture_pair = ar.load_texture_pair(f"{main_path}1.png")
+
+        # Adjust the collision box. Default includes too much empty space
+        # side-to-side. Box is centered at sprite center, (0, 0)
+        self.points = [[-75, -100], [80, -100], [80, 100], [-75, 100]]
+
+        # add walking sprites to list
+        self.walking_textures = []
+        for i in range(1,6):
+            texture = ar.load_texture_pair(f"{main_path}{i}.png")
+            self.walking_textures.append(texture)
+
+    def update_animation(self, delta_time: float = 1/60):
+        # figure if we need to flip left or right
+        if self.change_x < 0 and self.character_face_direction == RIGHT_FACING:
+            self.character_face_direction = LEFT_FACING
+        if self.change_x > 0 and self.character_face_direction == LEFT_FACING:
+            self.character_face_direction = RIGHT_FACING
+
+        if self.change_x == 0 and self.change_y == 0:
+            self.texture = self.idle_texture_pair[self.character_face_direction]
+            return
+
+        # walking animation
+        self.cur_texture += 1
+        if self.cur_texture > 4 * UPDATES_PER_FRAME:
+            self.cur_texture = 0
+        self.texture = self.walking_textures[self.cur_texture // UPDATES_PER_FRAME][self.character_face_direction]
+
+
 
 class Game(ar.Window):
-    """Space Shooter side scroller game
-    Player starts on the left, enemies appear on the right
-    Player can move anywhere, but not off screen
-    Enemies fly to the left at variable speed
-    Collisions end the game
+    """
+    Main game window
+    Player moves and jumps across platforms and avoids dangerous enemies
+
     """
 
     def __init__(self, width, height, title):
@@ -91,10 +132,9 @@ class Game(ar.Window):
 
         # Set up the empty sprite lists
         self.player_list = None
-        self.enemies_list = ar.SpriteList()
-        self.clouds_list = ar.SpriteList()
+        self.enemies_list = None
         self.wall_list = None # list of walls that an object can collide with
-        self.all_sprites = ar.SpriteList()
+        self.all_sprites = ar.SpriteList() # the list of sprites on the screen
         self.score = 0 # the player score
         self.player = None # the player object
         self.physics_engine = None # the physics engine object
@@ -113,9 +153,11 @@ class Game(ar.Window):
 
         # Set up the player
         ar.Sprite()
+        self.load_level(self.level)
         self.player = PlayerCharacter()
-        self.player.center_y = 450
-        self.player.center_x = 1000
+        self.player.center_y = 200
+        self.player.center_x = 200
+        self.player.spawnpoint = self.player.center_x, self.player.center_y
         self.player.left = 10
         self.player_list.append(self.player)
 
@@ -123,9 +165,6 @@ class Game(ar.Window):
 
         # check if there is a "game over"
         self.game_over = False
-
-        # add the player to the sprite list
-        # self.all_sprites.append(self.player)
 
         # Unpause the game, reset collision timer
         self.paused = False
@@ -142,7 +181,12 @@ class Game(ar.Window):
         self.physics_engine = ar.PhysicsEnginePlatformer(self.player,
                                                              self.wall_list,
                                                              gravity_constant=GRAVITY)
+        self.enemies_list = ar.tilemap.process_layer(my_map,
+                                                  layer_name='Enemies',
+                                                  scaling=TILE_SPRITE_SCALING,
+                                                  use_spatial_hash=True)
         self.view_left = 0
+        spawn_coords = ar.get_tilemap_layer(map_object=my_map, layer_path="Player Spawn")
         self.view_bottom = 0
 
     def on_key_release(self, key: int, modifiers: int):
@@ -205,6 +249,13 @@ class Game(ar.Window):
         self.player_list.update()
         self.player_list.update_animation()
         self.all_sprites.update()
+        self.enemies_list.update()
+
+        if ar.check_for_collision_with_list(self.player,
+                                                self.enemies_list):
+            self.player.change_x = 0
+            self.player.change_y = 0
+            self.player.center_x, self.player.center_y = self.player.spawnpoint
 
         if self.player.right >= self.end_of_map:
             self.load_level(self.level + 1)
@@ -270,6 +321,7 @@ class Game(ar.Window):
         self.all_sprites.draw()
         self.player_list.draw()
         self.wall_list.draw()
+        self.enemies_list.draw()
         msg = self.end_of_map
         msg2 = self.player.center_x
         output = f"Map width: {msg:.2f}"
