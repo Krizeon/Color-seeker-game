@@ -6,5 +6,7 @@ This game is a passion project that came about after hours of indulging in a var
 The name "Color Seeker" is a working title. It is a hint to what the gameplay will be like in the future. 
 
 Color Seeker is coded in Python 3.8 primarily using the Arcade module. The structure of the code is Object-Oriented with Player, Window, View and Game objects. 
+
+Here's a quick screenshot of how it looks as of early October:
  
  
