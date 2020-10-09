@@ -8,5 +8,6 @@ The name "Color Seeker" is a working title. It is a hint to what the gameplay wi
 Color Seeker is coded in Python 3.8 primarily using the Arcade module. The structure of the code is Object-Oriented with Player, Window, View and Game objects. 
 
 Here's a quick screenshot of how it looks as of early October:
+![Color Seeker game screenshot](https://github.com/Krizeon/Color-seeker-game/blob/master/early%20game%20snip.png)
  
  
