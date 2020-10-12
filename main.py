@@ -6,7 +6,7 @@ SCREEN_HEIGHT = 600
 SCREEN_WIDTH = 800
 SCREEN_TITLE = "Color seeker!"
 SCALING = 1
-SPRITE_SCALING = 0.3
+SPRITE_SCALING = 0.4
 TILE_SPRITE_SCALING = 0.5
 DEFAULT_COLOR = [255,255,255,255]
 RED_COLOR = [255,0,0,255]
@@ -18,7 +18,7 @@ PLAYER_SPRITE="sprites/greenguy_walking"
 
 LEFT_FACING = 1
 RIGHT_FACING = 0
-UPDATES_PER_FRAME = 5
+UPDATES_PER_FRAME = 13
 GRAVITY = 0.5
 JUMP_SPEED = 9
 MOVEMENT_SPEED = 4
@@ -56,17 +56,17 @@ class PlayerCharacter(ar.Sprite):
         self.jumping = False
         self.scale = SPRITE_SCALING
 
-        main_path = "sprites/greenguy_walking"
-        self.idle_texture_pair = ar.load_texture_pair(f"{main_path}1.png")
+        main_path = "sprites/playerwalking/player"
+        self.idle_texture_pair = ar.load_texture_pair(f"{main_path}_idle.png")
 
         # Adjust the collision box. Default includes too much empty space
         # side-to-side. Box is centered at sprite center, (0, 0)
-        self.points = [[-75, -100], [80, -100], [80, 100], [-75, 100]]
+        self.points = [[-50, -60], [50, -60], [50, 50], [-50, 50]]
 
         # add walking sprites to list
         self.walking_textures = []
-        for i in range(1,6):
-            texture = ar.load_texture_pair(f"{main_path}{i}.png")
+        for i in range(1,14):
+            texture = ar.load_texture_pair(f"{main_path}walking{i}.png")
             self.walking_textures.append(texture)
 
     def update_animation(self, delta_time: float = 1/60):
@@ -81,8 +81,8 @@ class PlayerCharacter(ar.Sprite):
             return
 
         # walking animation
-        self.cur_texture += 1
-        if self.cur_texture > 4 * UPDATES_PER_FRAME:
+        self.cur_texture += 12
+        if self.cur_texture > 12 * UPDATES_PER_FRAME:
             self.cur_texture = 0
         self.texture = self.walking_textures[self.cur_texture // UPDATES_PER_FRAME][self.character_face_direction]
 
@@ -325,8 +325,9 @@ class GameView(ar.View):
                 self.player.change_x = 0
                 self.player.change_y = 0
 
+        # if player hits enemy, deduce health and knock them back
         if (self.player.took_damage is False) and \
-                (ar.check_for_collision_with_list(self.player, self.enemies_list)):  # if player hits enemy, deduce health and knock them back
+                (ar.check_for_collision_with_list(self.player, self.enemies_list)):
             self.player.change_x = -5 # bounce player back
             self.player.change_y = 5 # player jumps up a bit
             self.player.health -= 20 # reduce health
@@ -335,18 +336,21 @@ class GameView(ar.View):
             self.player.color = RED_COLOR #tint the player red
             self.player.time_last_hit = int(round(time.time() * 1000))
 
-        if self.player.health <= 0: # if player dies (runs out of health), respawn at the beginning of the level
+        # if player dies (runs out of health), respawn at the beginning of the level
+        if self.player.health <= 0:
             self.player.change_x = 0
             self.player.change_y = 0
             self.player.center_x, self.player.center_y = self.player.spawnpoint
             self.player.health = 99
 
-        if self.player.right >= self.end_of_map: # if player gets to the right edge of the level, go to next level
+        # if player gets to the right edge of the level, go to next level
+        if self.player.right >= self.end_of_map:
             self.level += 1 # switch to next level
             self.load_level(self.level)
             self.player.spawnpoint = [64,64]
             self.player.center_x, self.player.center_y = self.player.spawnpoint
 
+        # if the player hits the bottom of the level, player dies and respawns at the start of the level
         if self.player.bottom <= 0:
             self.level += 1 # switch to next level
             self.load_level(self.level)
