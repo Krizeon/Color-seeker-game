@@ -1,13 +1,17 @@
 import arcade as ar
+import pymunk as pm
 import time
 
 
-SCREEN_HEIGHT = 600
-SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 720
+SCREEN_WIDTH = 1280
 SCREEN_TITLE = "Color seeker!"
 SCALING = 1
-SPRITE_SCALING = 0.4
-TILE_SPRITE_SCALING = 0.5
+SPRITE_SCALING = 0.5
+TILE_SCALING = 0.6
+SPRITE_PIXEL_SIZE = 128
+GRID_PIXEL_SIZE = (SPRITE_PIXEL_SIZE * TILE_SCALING)
+
 DEFAULT_COLOR = [255,255,255,255]
 RED_COLOR = [255,0,0,255]
 DAMAGE_BUFFER_TIME = 1000 # time in milliseconds until player may take damage again
@@ -16,17 +20,19 @@ DAMAGE_BUFFER_TIME = 1000 # time in milliseconds until player may take damage ag
 WINDOW_TITLE = "Cool Game!"
 PLAYER_SPRITE="sprites/greenguy_walking"
 
+# direction that the sprite is facing
 LEFT_FACING = 1
 RIGHT_FACING = 0
-UPDATES_PER_FRAME = 13
+
+UPDATES_PER_FRAME = 15
 GRAVITY = 0.5
 JUMP_SPEED = 9
 MOVEMENT_SPEED = 4
 
-VIEWPORT_MARGIN_TOP = 100
-VIEWPORT_MARGIN_BOTTOM = 100
-VIEWPORT_RIGHT_MARGIN = 400
-VIEWPORT_LEFT_MARGIN = 200
+VIEWPORT_MARGIN_TOP = 200
+VIEWPORT_MARGIN_BOTTOM = 200
+VIEWPORT_RIGHT_MARGIN = 500
+VIEWPORT_LEFT_MARGIN = 300
 
 def load_texture_pair(filename):
     """
@@ -45,23 +51,30 @@ class PlayerCharacter(ar.Sprite):
     def __init__(self):
         # set up parent class
         super().__init__()
+
         self.character_face_direction = RIGHT_FACING
         self.cur_texture = 0
-        self.spawnpoint = [0,0]
+        self.spawnpoint = [300,100]
         self.health = 0
         self.color = [0,0,0,0] # color is RGBA, 4th int being opacity between 0-255
         self.took_damage = False
         self.time_last_hit = 0
+        self.crouching = False
+        self.default_points = [[-40, -60], [40, -60], [40, 50], [-40, 50]]
 
         self.jumping = False
         self.scale = SPRITE_SCALING
 
-        main_path = "sprites/playerwalking/player"
+        main_path = "sprites/player_sprites/player"
         self.idle_texture_pair = ar.load_texture_pair(f"{main_path}_idle.png")
+        self.crouching_texture_pair = ar.load_texture_pair(f"{main_path}_squished.png")
 
         # Adjust the collision box. Default includes too much empty space
         # side-to-side. Box is centered at sprite center, (0, 0)
-        self.points = [[-50, -60], [50, -60], [50, 50], [-50, 50]]
+        # self.points = self.default_points
+        self.texture = self.idle_texture_pair[0]
+
+        self.set_hit_box(self.texture.hit_box_points)
 
         # add walking sprites to list
         self.walking_textures = []
@@ -76,8 +89,23 @@ class PlayerCharacter(ar.Sprite):
         if self.change_x > 0 and self.character_face_direction == LEFT_FACING:
             self.character_face_direction = RIGHT_FACING
 
-        if self.change_x == 0 and self.change_y == 0:
+        # change to crouching sprite if holding DOWN or S
+        if self.crouching and self.change_x == 0:
+            # self.points = [[-40, -30], [40, -30], [40, 25], [-40, 25]]
+            self.texture = self.crouching_texture_pair[self.character_face_direction]
+            self.set_hit_box(self.texture.hit_box_points)
+            return
+
+        if self.change_x == 0 and self.change_y == 0 and not self.crouching:
             self.texture = self.idle_texture_pair[self.character_face_direction]
+            self.set_hit_box(self.texture.hit_box_points)
+            return
+
+        # idle texture
+        if self.change_x == 0 and not self.crouching:
+            # self.points = self.default_points
+            self.texture = self.idle_texture_pair[self.character_face_direction]
+            self.set_hit_box(self.texture.hit_box_points)
             return
 
         # walking animation
@@ -160,7 +188,7 @@ class PauseView(ar.View):
 
     def on_show(self):
         """ This is run once when we switch to this view """
-        ar.set_background_color(ar.csscolor.AQUAMARINE)
+        ar.set_background_color(ar.csscolor.BLUE_VIOLET)
 
         # Reset the viewport, necessary if we have a scrolling game and we need
         # to reset the viewport back to the start so we can see what we draw.
@@ -208,20 +236,18 @@ class GameView(ar.View):
     def setup(self):
         """Get the game ready to play
         """
-        self.player_list = ar.SpriteList()
-
         # Set the background color
         ar.set_background_color(ar.color.BLACK)
 
+        self.player_list = ar.SpriteList()
+
         # Set up the player
-        ar.Sprite()
-        self.load_level(self.level)
         self.player = PlayerCharacter()
         self.player.center_y = 200
         self.player.center_x = 200
         self.player.health = 99
-        self.player.spawnpoint = self.player.center_x, self.player.center_y
-        self.player.left = 10
+        # self.player.spawnpoint = self.player.center_x, self.player.center_y
+        # self.player.left = 10
         self.player.color = DEFAULT_COLOR
         self.player_list.append(self.player)
 
@@ -237,18 +263,20 @@ class GameView(ar.View):
 
     def load_level(self, level):
         my_map = ar.tilemap.read_tmx(f"maps/map{level}.tmx")
-        self.end_of_map = my_map.map_size.width * 64
+        self.height = my_map.map_size.height
+        self.width = my_map.map_size.width
+        self.end_of_map = my_map.map_size.width * GRID_PIXEL_SIZE
         self.wall_list = ar.tilemap.process_layer(my_map,
                                                   layer_name='Foreground',
-                                                  scaling=TILE_SPRITE_SCALING,
+                                                  scaling=TILE_SCALING,
                                                   use_spatial_hash=True)
         self.physics_engine = ar.PhysicsEnginePlatformer(self.player,
                                                              self.wall_list,
                                                              gravity_constant=GRAVITY)
         self.enemies_list = ar.tilemap.process_layer(my_map,
-                                                      layer_name='Enemies',
-                                                      scaling=TILE_SPRITE_SCALING,
-                                                      use_spatial_hash=True)
+                                                     layer_name='Enemies',
+                                                     scaling=TILE_SCALING,
+                                                     use_spatial_hash=True)
         self.view_left = 0
         spawn_coords = ar.get_tilemap_layer(map_object=my_map, layer_path="Player Spawn")
         self.view_bottom = 0
@@ -258,6 +286,8 @@ class GameView(ar.View):
             self.player.change_x = 0
         elif key == ar.key.RIGHT or key == ar.key.D:
             self.player.change_x = 0
+        elif key == ar.key.DOWN or key == ar.key.S:
+            self.player.crouching = False
 
     def on_key_press(self, symbol: int, modifiers: int):
         """
@@ -276,24 +306,56 @@ class GameView(ar.View):
             view = PauseView()
             self.window.show_view(view)
 
-        # move up
+        # jump up
         if symbol == ar.key.W or symbol == ar.key.UP:
-            if self.physics_engine.can_jump():
-                self.player.change_y = JUMP_SPEED
+            if not self.player.crouching:
+                if self.physics_engine.can_jump():
+                    self.player.change_y = JUMP_SPEED
+                    self.player.jumping = True
             # self.player.change_y = 5
             # self.player.jumping = True
 
-        # # move down
-        # if symbol == ar.key.S or symbol == ar.key.DOWN:
-        #     self.player.change_y = -
+        # crouch (squish in half)
+        if symbol == ar.key.S or symbol == ar.key.DOWN:
+            if not self.player.jumping:
+                self.player.crouching = True
 
         # move left
         if symbol == ar.key.A or symbol == ar.key.LEFT:
-            self.player.change_x = -MOVEMENT_SPEED
+            if not self.player.crouching:
+                self.player.change_x = -MOVEMENT_SPEED
 
         # move right
         if (symbol == ar.key.D or symbol == ar.key.RIGHT):
-            self.player.change_x = MOVEMENT_SPEED
+            if not self.player.crouching:
+                self.player.change_x = MOVEMENT_SPEED
+
+    def process_damage(self):
+        if self.player.took_damage == True:
+            current_time = int(round(time.time() * 1000))
+            if (current_time - self.player.time_last_hit) > DAMAGE_BUFFER_TIME:
+                self.player.took_damage = False
+                self.player.color = DEFAULT_COLOR
+                self.player.change_x = 0
+                self.player.change_y = 0
+
+            # if player hits enemy, deduce health and knock them back
+        if (self.player.took_damage is False) and \
+                (ar.check_for_collision_with_list(self.player, self.enemies_list)):
+            self.player.change_x = -5  # bounce player back
+            self.player.change_y = 5  # player jumps up a bit
+            self.player.health -= 20  # reduce health
+            self.player.took_damage = True  # indicate that the player just got hit (so there is a
+            # buffer until player can take damage again)
+            self.player.color = RED_COLOR  # tint the player red
+            self.player.time_last_hit = int(round(time.time() * 1000))
+
+            # if player dies (runs out of health), respawn at the beginning of the level
+        if self.player.health <= 0:
+            self.player.change_x = 0
+            self.player.change_y = 0
+            self.player.center_x, self.player.center_y = self.player.spawnpoint
+            self.player.health = 99
 
     def on_update(self, delta_time: float):
         """
@@ -317,37 +379,16 @@ class GameView(ar.View):
         self.all_sprites.update()
         self.enemies_list.update()
 
-        if self.player.took_damage == True:
-            current_time = int(round(time.time() * 1000))
-            if (current_time - self.player.time_last_hit) > DAMAGE_BUFFER_TIME:
-                self.player.took_damage = False
-                self.player.color = DEFAULT_COLOR
-                self.player.change_x = 0
-                self.player.change_y = 0
+        if self.player.change_y != 0:
+            self.player.jumping = True
 
-        # if player hits enemy, deduce health and knock them back
-        if (self.player.took_damage is False) and \
-                (ar.check_for_collision_with_list(self.player, self.enemies_list)):
-            self.player.change_x = -5 # bounce player back
-            self.player.change_y = 5 # player jumps up a bit
-            self.player.health -= 20 # reduce health
-            self.player.took_damage = True # indicate that the player just got hit (so there is a
-                                    # buffer until player can take damage again)
-            self.player.color = RED_COLOR #tint the player red
-            self.player.time_last_hit = int(round(time.time() * 1000))
-
-        # if player dies (runs out of health), respawn at the beginning of the level
-        if self.player.health <= 0:
-            self.player.change_x = 0
-            self.player.change_y = 0
-            self.player.center_x, self.player.center_y = self.player.spawnpoint
-            self.player.health = 99
+        self.process_damage()
 
         # if player gets to the right edge of the level, go to next level
         if self.player.right >= self.end_of_map:
             self.level += 1 # switch to next level
             self.load_level(self.level)
-            self.player.spawnpoint = [64,64]
+            self.player.spawnpoint = [100,125]
             self.player.center_x, self.player.center_y = self.player.spawnpoint
 
         # if the player hits the bottom of the level, player dies and respawns at the start of the level
@@ -413,10 +454,10 @@ class GameView(ar.View):
         self.wall_list.draw()
         self.enemies_list.draw()
         msg = self.end_of_map
-        msg2 = self.player.center_x
+        msg2 = self.player.change_y
         msg3 = self.player.health
         output = f"Map width: {msg:.2f}"
-        output2 = f"Player x pos: {msg2:.2f}"
+        output2 = f"Player Y velocity: {msg2:.2f}"
         output3 = f"HP: {msg3:.2f}"
         ar.draw_text(text=output,
                      start_x=self.view_left + (SCREEN_WIDTH - 150),
