@@ -5,7 +5,7 @@ from typing import Optional
 import time
 
 # all classes and constants from views.py and constants.py are
-# going to be used in this file, so we import all of them
+# going to be used in this file, so we import all of them!
 from views import *
 from constants import *
 
