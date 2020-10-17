@@ -6,7 +6,7 @@ import time
 
 # all classes and constants from views.py and constants.py are
 # going to be used in this file, so we import all of them!
-from views import *
+import views
 from constants import *
 
 
@@ -45,31 +45,38 @@ class PlayerCharacter(ar.Sprite):
         # How far have we traveled horizontally since changing the texture
         self.x_odometer = 0
 
+        # How far have we traveled vertically since changing the texture
+        self.y_odometer = 0
+
         main_path = "sprites/player_sprites/player"
+
+        # add idle texture
         self.idle_texture_pair = ar.load_texture_pair(f"{main_path}_idle.png")
+
+        # add crouching texture
         self.crouching_texture_pair = ar.load_texture_pair(f"{main_path}_squished.png")
 
-        # Adjust the collision box. Default includes too much empty space
-        # side-to-side. Box is centered at sprite center, (0, 0)
-        # self.points = self.default_points
-        self.texture = self.idle_texture_pair[0]
-
-        self.set_hit_box(self.texture.hit_box_points)
+        #add jumping texture
+        self.jumping_texture_pair = ar.load_texture_pair(f"{main_path}_jumping.png")
 
         # add walking sprites to list
         self.walking_textures = []
-        for i in range(1,14):
+        for i in range(1, 14):
             texture = ar.load_texture_pair(f"{main_path}walking{i}.png")
             self.walking_textures.append(texture)
+
+        self.texture = self.idle_texture_pair[0]
+        self.set_hit_box(self.texture.hit_box_points)
+        # self.height = 20
 
 
     def pymunk_moved(self, physics_engine, dx, dy, d_angle):
         """
         handle animation when pymunk detects the player is moving
         :param physics_engine:
-        :param dx:
-        :param dy:
-        :param d_angle:
+        :param dx: current x velocity
+        :param dy: current y velocity
+        :param d_angle: current angle
         :return:
         """
         # figure if we need to flip left or right
@@ -83,26 +90,27 @@ class PlayerCharacter(ar.Sprite):
 
         # Add to the odometer how far we've moved
         self.x_odometer += dx
+        self.y_odometer += dy
 
         # change to crouching sprite if holding DOWN or S
-        if self.crouching and self.change_x == 0:
-            # self.points = [[-40, -30], [40, -30], [40, 25], [-40, 25]]
+        if self.crouching and is_on_ground:
             self.texture = self.crouching_texture_pair[self.character_face_direction]
             self.set_hit_box(self.texture.hit_box_points)
             return
 
-        # if self.change_x == 0 and self.change_y == 0 and not self.crouching:
-        #     self.texture = self.idle_texture_pair[self.character_face_direction]
-        #     self.set_hit_box(self.texture.hit_box_points)
-        #     return
-
         # idle texture
-        if abs(dx) <= DEAD_ZONE:
+        if abs(dx) <= DEAD_ZONE and not self.jumping:
             self.texture = self.idle_texture_pair[self.character_face_direction]
+            return
+
+        # jumping texture
+        if self.jumping:
+            self.texture = self.jumping_texture_pair[self.character_face_direction]
             return
 
         # walking animation
         if abs(self.x_odometer) > DISTANCE_TO_CHANGE_TEXTURE:
+            # self.set_hit_box(self.texture.hit_box_points)
             self.x_odometer = 0
 
             # do the walking animation
@@ -111,7 +119,7 @@ class PlayerCharacter(ar.Sprite):
                 self.cur_texture = 0
             self.texture = self.walking_textures[self.cur_texture // UPDATES_PER_FRAME][self.character_face_direction]
 
-class Enemy(ar.Sprite):
+class Enemy():
     def __init__(self):
         # set up parent class
         super().__init__()
@@ -242,21 +250,21 @@ class GameView(ar.View):
                                                   scaling=TILE_SCALING,
                                                   use_spatial_hash=True)
 
-        self.physics_engine.add_sprite_list(self.wall_list,
-                                            friction=WALL_FRICTION,
-                                            collision_type="wall",
-                                            body_type=ar.PymunkPhysicsEngine.STATIC)
-
         self.enemies_list = ar.tilemap.process_layer(my_map,
                                                      layer_name='Enemies',
                                                      scaling=TILE_SCALING,
                                                      use_spatial_hash=True)
 
+        self.physics_engine.add_sprite_list(self.wall_list,
+                                            friction=WALL_FRICTION,
+                                            collision_type="wall",
+                                            body_type=ar.PymunkPhysicsEngine.STATIC)
+
         self.physics_engine.add_sprite_list(self.enemies_list,
-                                            friction=ENEMY_FRICTION,
-                                            mass=ENEMY_MASS,
-                                            moment=ar.PymunkPhysicsEngine.MOMENT_INF,
+                                            mass=3,
+                                            body_type=ar.PymunkPhysicsEngine.KINEMATIC,
                                             collision_type="enemy")
+
 
         spawn_coords = ar.get_tilemap_layer(map_object=my_map, layer_path="Player Spawn")
         self.view_left = 0
@@ -283,7 +291,6 @@ class GameView(ar.View):
 
         elif key == ar.key.UP or key == ar.key.W:
             self.up_pressed = False
-            self.player.crouching = False
 
         elif key == ar.key.P:
             self.p_pressed = False
@@ -301,10 +308,10 @@ class GameView(ar.View):
             self.escape_pressed = True
             ar.close_window()
 
-        # pause game
+        # pause game (do this here to immediately pause without interrupting game)
         if key == ar.key.P:
-            view = PauseView(self)
-            self.window.show_view(view)
+            pause_view = views.PauseView(game_view=self)
+            self.window.show_view(pause_view)
 
         if key == ar.key.W or key == ar.key.UP:
             self.up_pressed = True
@@ -328,14 +335,22 @@ class GameView(ar.View):
         :return: a game action for any given key press (player
         movement, pause game, quit game, etc)
         """
+        # sliding and moving at the same time!
+        if (self.down_pressed and self.right_pressed) or (self.down_pressed and self.left_pressed):
+            if self.physics_engine.is_on_ground(self.player) and not self.player.jumping:
+                self.player.crouching = True
+                # smoothly slide down a hill
+                self.physics_engine.set_friction(self.player, 0.2)
+                # slide using leftover momentum from running left or right
+
         # move left
-        if self.left_pressed:
+        elif self.left_pressed:
             if not self.player.crouching:
                 # Create a force to the left. Apply it.
                 force = (-PLAYER_MOVE_FORCE_ON_GROUND, 0)
                 self.physics_engine.apply_force(self.player, force)
                 # Set friction to zero for the player while moving
-                self.physics_engine.set_friction(self.player, 0)
+                self.physics_engine.set_friction(self.player, 0.0)
 
         # move right
         elif self.right_pressed:
@@ -344,8 +359,14 @@ class GameView(ar.View):
                 force = (PLAYER_MOVE_FORCE_ON_GROUND, 0)
                 self.physics_engine.apply_force(self.player, force)
                 # Set friction to zero for the player while moving
-                self.physics_engine.set_friction(self.player, 0)
+                self.physics_engine.set_friction(self.player, 0.0)
 
+        # crouch (squish in half)
+        elif self.down_pressed:
+            if self.physics_engine.is_on_ground(self.player) and not self.player.jumping:
+                self.player.crouching = True
+                # smoothly slide down a hill
+                self.physics_engine.set_friction(self.player, 0.2)
         else:
             # Player's feet are not moving. Therefore up the friction so we stop.
             self.physics_engine.set_friction(self.player, 1.0)
@@ -356,14 +377,12 @@ class GameView(ar.View):
                 if self.physics_engine.is_on_ground(self.player):
                     impulse = (0, PLAYER_JUMP_IMPULSE)
                     self.physics_engine.apply_impulse(self.player, impulse)
+                    self.player.jumping = True
                 # if self.physics_engine.can_jump():
                 #     self.player.change_y = JUMP_SPEED
                 #     self.player.jumping = True
 
-        # crouch (squish in half)
-        if self.down_pressed:
-            if not self.player.jumping:
-                self.player.crouching = True
+
 
         self.physics_engine.step()
 
@@ -400,6 +419,29 @@ class GameView(ar.View):
             self.physics_engine.set_position(self.player, self.player.spawnpoint)
             self.player.health = 99
 
+    def track_moving_enemies(self, delta_time):
+        # For each moving sprite, see if we've reached a boundary and need to
+        # reverse course.
+        count = 0
+        for enemy_sprite in self.enemies_list:
+            count += 1
+            if enemy_sprite.boundary_right and enemy_sprite.change_x > 0 and enemy_sprite.right > enemy_sprite.boundary_right:
+                enemy_sprite.change_x *= -1
+            elif enemy_sprite.boundary_left and enemy_sprite.change_x < 0 and enemy_sprite.left < enemy_sprite.boundary_left:
+                enemy_sprite.change_x *= -1
+            if enemy_sprite.boundary_top and enemy_sprite.change_y > 0 and enemy_sprite.top > enemy_sprite.boundary_top:
+                enemy_sprite.change_y *= -1
+            elif enemy_sprite.boundary_bottom and enemy_sprite.change_y < 0 and enemy_sprite.bottom < enemy_sprite.boundary_bottom:
+                enemy_sprite.change_y *= -1
+
+            # Figure out and set our moving platform velocity.
+            # Pymunk uses velocity is in pixels per second. If we instead have
+            # pixels per frame, we need to convert.
+            # force = (-PLAYER_MOVE_FORCE_ON_GROUND, 0)
+            # self.physics_engine.apply_force(enemy_sprite, force)
+            velocity = (enemy_sprite.change_x * 1 / delta_time, enemy_sprite.change_y * 1 / delta_time)
+            self.physics_engine.set_velocity(enemy_sprite, velocity)
+
     def on_update(self, delta_time: float):
         """
         Update the positions and statuses of all game objects
@@ -417,10 +459,8 @@ class GameView(ar.View):
         self.all_sprites.update()
         self.enemies_list.update()
 
-        if self.player.change_y != 0:
-            self.player.jumping = True
-
         self.process_damage()
+        self.track_moving_enemies(delta_time)
 
         # if player gets to the right edge of the level, go to next level
         if self.player.right >= self.end_of_map:
@@ -440,7 +480,13 @@ class GameView(ar.View):
             self.load_level(self.level)
             if self.level == 2:
                 self.player.spawnpoint = [100, 100]
-            self.physics_engine.set_position(self.player, self.player.spawnpoint)
+                self.physics_engine.set_position(self.player, self.player.spawnpoint)
+            elif self.level == 3:
+                self.player.spawnpoint = [50, 300]
+                self.physics_engine.set_position(self.player, self.player.spawnpoint)
+
+        if self.physics_engine.is_on_ground(self.player) and self.player.jumping:
+            self.player.jumping = False
 
         # track if we need to change the view port
         changed = False
@@ -478,6 +524,7 @@ class GameView(ar.View):
                                 self.view_bottom,
                                 SCREEN_HEIGHT + self.view_bottom)
 
+
     def on_draw(self):
         """
         Draw the game objects
@@ -488,28 +535,74 @@ class GameView(ar.View):
         self.player_list.draw()
         self.wall_list.draw()
         self.enemies_list.draw()
+
+        # get player x/y velocity from the physics engine ([x,y])
+        player_velocities = self.physics_engine.get_physics_object(self.player).body.velocity
+        velocity_x = player_velocities[0]
+        velocity_y = player_velocities[1]
+
         msg = self.end_of_map
-        msg2 = self.player.change_y
+        msg2 = self.player.crouching
         msg3 = self.player.health
+        msg4 = velocity_x
+        msg5 = velocity_y
+        msg6 = self.player.jumping
+        msg7 = self.player.center_x
+        msg8 = self.player.y_odometer
+
         output = f"Map width: {msg:.2f}"
-        output2 = f"Player Y velocity: {msg2:.2f}"
+        output2 = f"Is crouching: {msg2}"
         output3 = f"HP: {msg3:.2f}"
+        output4 = f"Player X vel: {msg4:.2f}"
+        # output5 = f"Player Y vel: {msg5:.2f}"
+        output6 = f"Player Jumping?: {msg6}"
+        output7 = f"Player X pos?: {msg7:.1f}"
+        output8 = f"Player Y odometer: {msg8:.1f}"
+
         ar.draw_text(text=output,
-                     start_x=self.view_left + (SCREEN_WIDTH - 150),
+                     start_x=self.view_left + 20,
                      start_y=self.view_bottom + (SCREEN_HEIGHT - 25),
+                     font_size= 18,
                      color=ar.color.WHITE)
         ar.draw_text(text=output2,
-                     start_x=self.view_left + (SCREEN_WIDTH - 175),
-                     start_y=self.view_bottom + (SCREEN_HEIGHT - 40),
+                     start_x=self.view_left + 20,
+                     start_y=self.view_bottom + (SCREEN_HEIGHT - 45),
+                     font_size=18,
                      color=ar.color.WHITE)
         ar.draw_text(text=output3,
-                     start_x=self.view_left + (SCREEN_WIDTH - 125),
-                     start_y=self.view_bottom + (SCREEN_HEIGHT - 55),
+                     start_x=self.view_left + 20,
+                     start_y=self.view_bottom + (SCREEN_HEIGHT - 65),
+                     font_size=18,
                      color=ar.color.WHITE)
+        ar.draw_text(text=output4,
+                     start_x=self.view_left + 20,
+                     start_y=self.view_bottom + (SCREEN_HEIGHT - 85),
+                     font_size=18,
+                     color=ar.color.WHITE)
+        # ar.draw_text(text=output5,
+        #              start_x=self.view_left + 20,
+        #              start_y=self.view_bottom + (SCREEN_HEIGHT - 105),
+        #              font_size=18,
+        #              color=ar.color.WHITE)
+        ar.draw_text(text=output6,
+                     start_x=self.view_left + 20,
+                     start_y=self.view_bottom + (SCREEN_HEIGHT - 125),
+                     font_size=18,
+                     color=ar.color.WHITE)
+        ar.draw_text(text=output7,
+                     start_x=self.view_left + 20,
+                     start_y=self.view_bottom + (SCREEN_HEIGHT - 145),
+                     font_size=18,
+                     color=ar.color.WHITE)
+        # ar.draw_text(text=output8,
+        #              start_x=self.view_left + 20,
+        #              start_y=self.view_bottom + (SCREEN_HEIGHT - 165),
+        #              font_size=18,
+        #              color=ar.color.WHITE)
 
 def run_game():
     window = ar.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
-    start_view = MenuView()
+    start_view = views.MenuView()
     window.show_view(start_view)
     ar.run()
 

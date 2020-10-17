@@ -11,7 +11,7 @@ SCREEN_TITLE = "Color seeker!"
 SCALING = 1 # might be useful to remove this
 
 # scaling of sprites (mostly the player)
-SPRITE_SCALING = 0.5
+SPRITE_SCALING = 0.6
 
 # scaling of tiles from .tmx files
 TILE_SCALING = 0.6
@@ -37,11 +37,11 @@ PLAYER_SPRITE="sprites/greenguy_walking"
 LEFT_FACING = 1
 RIGHT_FACING = 0
 
-UPDATES_PER_FRAME = 15 #may not be necessary anymore?
+UPDATES_PER_FRAME = 10 #may not be necessary anymore?
 
 # physics related constants below
 # gravity affects objects in the world. higher values, faster falling speeds
-GRAVITY = 2000
+GRAVITY = 980
 
 # damping is the percentage of velocity lost per second
 DEFAULT_DAMPING = 1.0
@@ -53,14 +53,16 @@ PLAYER_FRICTION = 1.0
 # mass of the player (higher values means one could push objects much easier)
 PLAYER_MASS = 2.0
 
-ENEMY_MASS = 100
+ENEMY_MASS = 10
 ENEMY_FRICTION = 0.9
 
 # friction of tiles that are deemed to be walls
 WALL_FRICTION = 0.8
 
-# max
 PLAYER_MOVE_FORCE_ON_GROUND = 8000
+ENEMY_MOVE_FORCE_ON_GROUND = 8000
+
+# max x/y speeds
 PLAYER_MAX_HORIZONTAL_SPEED = 300
 PLAYER_MAX_VERTICAL_SPEED = 900
 
@@ -68,13 +70,13 @@ PLAYER_MAX_VERTICAL_SPEED = 900
 DEAD_ZONE = 0.1
 
 # how many pixels to move before we change the texture in the walking animation
-DISTANCE_TO_CHANGE_TEXTURE = 20
+DISTANCE_TO_CHANGE_TEXTURE = 15
 
 # force applied when moving left/right in the air
 PLAYER_MOVE_FORCE_IN_AIR = 900
 
 # strength of a jump
-PLAYER_JUMP_IMPULSE = 1800
+PLAYER_JUMP_IMPULSE = 1200
 
 # boundaries of the viewport box, relative to the screen window's resolution
 VIEWPORT_MARGIN_TOP = 200

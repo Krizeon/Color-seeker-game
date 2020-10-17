@@ -3,7 +3,14 @@ from constants import SCREEN_HEIGHT
 from main import GameView
 import arcade as ar
 
+# import arcade.gui
+# from arcade.gui import UIManager
+
 class MenuView(ar.View):
+    """
+    View to show game menu
+    Displays an Arcade View window to show a menu view
+    """
     def on_show(self):
         ar.set_background_color(ar.color.WHITE)
 
@@ -12,6 +19,27 @@ class MenuView(ar.View):
         ar.draw_text("Menu Screen", SCREEN_WIDTH/2, SCREEN_HEIGHT/2,
                          ar.color.BLACK, font_size=50, anchor_x="center")
         ar.draw_text("Click to advance.", SCREEN_WIDTH/2, SCREEN_HEIGHT/2-75,
+                         ar.color.GRAY, font_size=20, anchor_x="center")
+
+    def on_mouse_press(self, _x, _y, _button, _modifiers):
+        game = GameView()
+        game.setup()
+        self.window.show_view(game)
+
+
+class WinView(ar.View):
+    """
+    View to show game menu
+    Displays an Arcade View window to show a menu view
+    """
+    def on_show(self):
+        ar.set_background_color(ar.color.GREEN)
+
+    def on_draw(self):
+        ar.start_render()
+        ar.draw_text("You win!!", SCREEN_WIDTH/2, SCREEN_HEIGHT/2,
+                         ar.color.BLACK, font_size=50, anchor_x="center")
+        ar.draw_text("Click screen to quit.", SCREEN_WIDTH/2, SCREEN_HEIGHT/2-75,
                          ar.color.GRAY, font_size=20, anchor_x="center")
 
     def on_mouse_press(self, _x, _y, _button, _modifiers):

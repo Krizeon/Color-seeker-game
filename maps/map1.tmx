@@ -1,43 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.4" tiledversion="1.4.2" orientation="orthogonal" renderorder="right-down" width="30" height="12" tilewidth="128" tileheight="128" infinite="0" nextlayerid="7" nextobjectid="13">
+<map version="1.4" tiledversion="1.4.2" orientation="orthogonal" renderorder="right-down" width="30" height="12" tilewidth="128" tileheight="128" infinite="0" nextlayerid="9" nextobjectid="24">
  <tileset firstgid="1" source="colorful_spritesheet.tsx"/>
  <tileset firstgid="17" source="enemy1.tsx"/>
- <tileset firstgid="18" source="greenguy_walking1.tsx"/>
  <layer id="1" name="Foreground" width="30" height="12">
   <data encoding="csv">
 13,0,0,0,0,0,0,0,0,0,14,11,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
 13,0,0,0,0,0,0,0,0,0,14,11,6,6,6,6,6,6,6,6,6,6,10,10,10,10,10,10,10,10,
 13,0,0,0,0,0,0,0,0,0,14,11,6,6,6,6,6,6,6,6,10,10,15,15,15,15,15,15,15,15,
-13,0,0,0,7,7,0,0,0,0,14,11,10,10,10,10,10,10,10,10,15,15,0,0,0,0,0,0,0,0,
-13,0,0,0,0,0,0,0,0,0,14,15,15,15,15,15,15,15,14,13,0,0,0,0,0,0,0,0,0,0,
-13,0,0,7,0,0,7,0,0,0,0,0,0,0,0,0,0,0,14,13,0,0,0,0,0,0,0,0,0,0,
-13,0,0,0,0,0,0,0,0,0,3,1,1,1,1,1,1,0,14,13,0,0,0,0,7,0,0,7,0,0,
-13,0,0,7,7,7,7,0,0,3,5,9,9,9,9,9,13,0,14,13,7,0,0,0,0,0,0,0,0,0,
-13,0,0,0,0,0,0,0,3,5,9,6,6,6,6,6,13,0,14,13,0,0,3,1,1,1,1,1,1,1,
-13,0,0,0,0,0,0,3,5,9,6,6,6,6,6,6,13,0,14,0,0,3,5,9,9,9,9,9,9,9,
-5,1,1,1,1,1,0,5,9,6,6,6,6,6,6,6,13,0,0,0,3,5,9,6,6,6,6,6,6,6,
-9,9,9,9,9,9,0,9,6,6,6,6,6,6,6,6,13,1,1,1,1,9,6,6,6,6,6,6,6,6
-</data>
- </layer>
- <layer id="4" name="Enemies" width="30" height="12">
-  <data encoding="csv">
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,17,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,17,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+13,0,0,0,7,0,0,0,0,0,14,15,15,15,15,15,15,15,10,10,15,15,0,0,0,0,0,0,0,0,
+13,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,14,13,0,0,0,0,0,0,0,0,0,0,
+13,0,7,0,0,0,7,0,0,0,0,0,0,0,0,0,0,0,14,13,0,0,0,0,0,0,0,0,0,0,
+13,0,0,0,0,0,0,0,0,0,0,0,7,7,0,0,0,0,14,13,0,0,0,0,7,0,0,7,0,0,
+13,0,7,1,1,1,7,0,0,0,0,0,0,0,0,0,0,7,14,13,7,0,0,0,0,0,0,0,0,0,
+13,0,0,0,0,0,0,0,0,0,0,7,0,0,7,0,0,0,14,13,0,0,3,1,1,1,1,1,1,1,
+13,0,0,0,0,0,0,3,1,1,1,1,1,1,1,1,2,0,14,0,0,3,5,9,9,9,9,9,9,9,
+5,0,1,1,1,1,1,5,9,9,9,9,9,9,9,12,13,0,0,0,3,5,9,6,6,6,6,6,6,6,
+9,0,9,9,9,9,9,9,6,6,6,6,6,6,6,12,13,1,1,1,1,9,6,6,6,6,6,6,6,6
 </data>
  </layer>
  <objectgroup id="3" name="Player Spawn">
-  <object id="3" x="432" y="836">
+  <object id="3" x="502.667" y="773.333">
    <point/>
+  </object>
+ </objectgroup>
+ <objectgroup id="7" name="Enemies">
+  <properties>
+   <property name="boundary_left" type="int" value="0"/>
+   <property name="boundary_right" type="int" value="0"/>
+   <property name="boundary_top" type="int" value="0"/>
+  </properties>
+  <object id="18" name="Grunt" gid="17" x="1142.83" y="1149.67" width="85" height="116">
+   <properties>
+    <property name="boundary_bottom" type="int" value="0"/>
+    <property name="boundary_left" type="int" value="600"/>
+    <property name="boundary_right" type="int" value="800"/>
+    <property name="boundary_top" type="int" value="0"/>
+    <property name="change_x" type="int" value="-1"/>
+   </properties>
+  </object>
+  <object id="20" name="Grunt" gid="17" x="750.5" y="894.667" width="85" height="116">
+   <properties>
+    <property name="boundary_bottom" type="int" value="0"/>
+    <property name="boundary_left" type="int" value="200"/>
+    <property name="boundary_right" type="int" value="500"/>
+    <property name="boundary_top" type="int" value="0"/>
+    <property name="change_x" type="int" value="-1"/>
+   </properties>
   </object>
  </objectgroup>
 </map>
