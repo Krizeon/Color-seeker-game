@@ -195,6 +195,7 @@ class GameView(ar.View):
         self.level = 1 # the name of the level (.tmx)
         self.message = None # message for debug purposes
         self.end_of_map = 0
+        self.top_of_map = 0
 
         # controls
         self.left_pressed = False
@@ -224,7 +225,7 @@ class GameView(ar.View):
         self.player.color = DEFAULT_COLOR
         self.player_list.append(self.player)
         self.player.spawnpoint = [100, 200]
-        self.level = 5
+        self.level = 1
 
         self.load_level(self.level)
 
@@ -259,6 +260,7 @@ class GameView(ar.View):
         self.height = my_map.map_size.height
         self.width = my_map.map_size.width
         self.end_of_map = my_map.map_size.width * GRID_PIXEL_SIZE
+        self.top_of_map = my_map.map_size.height * GRID_PIXEL_SIZE
         self.wall_list = ar.tilemap.process_layer(my_map,
                                                   layer_name='Foreground',
                                                   scaling=TILE_SCALING,
@@ -524,25 +526,25 @@ class GameView(ar.View):
 
         # Scroll left
         left_bndry = self.view_left + VIEWPORT_LEFT_MARGIN
-        if self.player.left < left_bndry:
+        if self.player.left < left_bndry and self.player.left > VIEWPORT_LEFT_MARGIN:
             self.view_left -= left_bndry - self.player.left
             changed = True
 
         # Scroll right
         right_bndry = self.view_left + SCREEN_WIDTH - VIEWPORT_RIGHT_MARGIN
-        if self.player.right > right_bndry:
+        if self.player.right > right_bndry and (self.player.right < (self.end_of_map - VIEWPORT_RIGHT_MARGIN)):
             self.view_left += self.player.right - right_bndry
             changed = True
 
         # Scroll up
         top_bndry = self.view_bottom + SCREEN_HEIGHT - VIEWPORT_MARGIN_TOP
-        if self.player.top > top_bndry:
+        if self.player.top > top_bndry and (self.player.top < (self.top_of_map - VIEWPORT_MARGIN_TOP)):
             self.view_bottom += self.player.top - top_bndry
             changed = True
 
         # Scroll down
         bottom_bndry = self.view_bottom + VIEWPORT_MARGIN_BOTTOM
-        if self.player.bottom < bottom_bndry:
+        if self.player.bottom < bottom_bndry and self.player.bottom > VIEWPORT_MARGIN_BOTTOM:
             self.view_bottom -= bottom_bndry - self.player.bottom
             changed = True
 
