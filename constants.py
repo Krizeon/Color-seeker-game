@@ -73,7 +73,7 @@ DEAD_ZONE = 0.1
 DISTANCE_TO_CHANGE_TEXTURE = 15
 
 # force applied when moving left/right in the air
-PLAYER_MOVE_FORCE_IN_AIR = 900
+PLAYER_MOVE_FORCE_IN_AIR = 100
 
 # strength of a jump
 PLAYER_JUMP_IMPULSE = 1200

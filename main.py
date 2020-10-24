@@ -10,15 +10,15 @@ import views
 from constants import *
 
 
-def load_texture_pair(filename):
-    """
-    Load a texture pair, with the second being a mirror image.
-    :param filename{string}: the name of a file
-    """
-    return [
-        ar.load_texture(filename),
-        ar.load_texture(filename, flipped_horizontally=True)
-    ]
+# def load_texture_pair(filename):
+#     """
+#     Load a texture pair, with the second being a mirror image.
+#     :param filename{string}: the name of a file
+#     """
+#     return [
+#         ar.load_texture(filename, can_cache=False),
+#         ar.load_texture(filename, can_cache=False, flipped_horizontally=True)
+#     ]
 
 
 class PlayerCharacter(ar.Sprite):
@@ -29,6 +29,7 @@ class PlayerCharacter(ar.Sprite):
         # set up parent class
         super().__init__()
 
+        self._hit_box_algorithm="None"
         self.character_face_direction = RIGHT_FACING
         self.cur_texture = 0
         self.spawnpoint = [300,100]
@@ -54,14 +55,14 @@ class PlayerCharacter(ar.Sprite):
         self.idle_texture_pair = ar.load_texture_pair(f"{main_path}_idle.png")
 
         # add crouching texture
-        self.crouching_texture_pair = ar.load_texture_pair(f"{main_path}_squished.png")
+        self.crouching_texture_pair = ar.load_texture_pair(f"{main_path}_squished.png", hit_box_algorithm="None")
 
         #add jumping texture
         self.jumping_texture_pair = ar.load_texture_pair(f"{main_path}_jumping.png")
 
         # add walking sprites to list
         self.walking_textures = []
-        for i in range(1, 14):
+        for i in range(1, 15):
             texture = ar.load_texture_pair(f"{main_path}walking{i}.png")
             self.walking_textures.append(texture)
 
@@ -73,11 +74,11 @@ class PlayerCharacter(ar.Sprite):
     def pymunk_moved(self, physics_engine, dx, dy, d_angle):
         """
         handle animation when pymunk detects the player is moving
-        :param physics_engine:
+        :param physics_engine: Pymunk physics engine
         :param dx: current x velocity
         :param dy: current y velocity
         :param d_angle: current angle
-        :return:
+        :return: n/a (used to end function)
         """
         # figure if we need to flip left or right
         if dx < 0 and self.character_face_direction == RIGHT_FACING:
@@ -96,26 +97,36 @@ class PlayerCharacter(ar.Sprite):
         if self.crouching and is_on_ground:
             self.texture = self.crouching_texture_pair[self.character_face_direction]
             self.set_hit_box(self.texture.hit_box_points)
+
+            shape = physics_engine.get_physics_object(sprite=self).shape
+
+            # poly = self.get_hit_box()
+            # scaled_poly = [[x * self.scale for x in z] for z in poly]
+            # shape = pm.Poly(body, scaled_poly)
+            print(physics_engine.get_sprite_for_shape(shape))
+            # physics_engine.get_physics_object(sprite=self).shape = shape
+            # self.hit_box = self.texture.hit_box_points
             return
 
         # idle texture
         if abs(dx) <= DEAD_ZONE and not self.jumping:
             self.texture = self.idle_texture_pair[self.character_face_direction]
+            self.set_hit_box(self.texture.hit_box_points)
             return
 
         # jumping texture
         if self.jumping:
             self.texture = self.jumping_texture_pair[self.character_face_direction]
+            self.set_hit_box(self.texture.hit_box_points)
+            # self.hit_box = self.texture.hit_box_points
             return
 
         # walking animation
         if abs(self.x_odometer) > DISTANCE_TO_CHANGE_TEXTURE:
-            # self.set_hit_box(self.texture.hit_box_points)
             self.x_odometer = 0
-
             # do the walking animation
-            self.cur_texture += 12
-            if self.cur_texture > 12 * UPDATES_PER_FRAME:
+            self.cur_texture += 13
+            if self.cur_texture > 13 * UPDATES_PER_FRAME:
                 self.cur_texture = 0
             self.texture = self.walking_textures[self.cur_texture // UPDATES_PER_FRAME][self.character_face_direction]
 
@@ -176,6 +187,7 @@ class GameView(ar.View):
         self.player_list = None
         self.enemies_list = None
         self.wall_list = None # list of walls that an object can collide with
+        self.scenery_list = None
         self.all_sprites = ar.SpriteList() # the list of sprites on the screen
         self.score = 0 # the player score
         self.player = None # the player object
@@ -191,6 +203,8 @@ class GameView(ar.View):
         self.down_pressed = False
         self.escape_pressed = False
         self.p_pressed = False
+        self.l_pressed = False
+        self.k_pressed = False
 
     def setup(self):
         """
@@ -203,14 +217,14 @@ class GameView(ar.View):
 
         # Set up the player
         self.player = PlayerCharacter()
-        self.player.center_y = 200
+
+        self.player.center_y = 500
         self.player.center_x = 200
         self.player.health = 99
-        # self.player.spawnpoint = self.player.center_x, self.player.center_y
-        # self.player.left = 10
         self.player.color = DEFAULT_COLOR
         self.player_list.append(self.player)
         self.player.spawnpoint = [100, 200]
+        self.level = 5
 
         self.load_level(self.level)
 
@@ -248,10 +262,16 @@ class GameView(ar.View):
         self.wall_list = ar.tilemap.process_layer(my_map,
                                                   layer_name='Foreground',
                                                   scaling=TILE_SCALING,
-                                                  use_spatial_hash=True)
+                                                  use_spatial_hash=False,
+                                                  hit_box_algorithm="Detailed")
 
         self.enemies_list = ar.tilemap.process_layer(my_map,
                                                      layer_name='Enemies',
+                                                     scaling=TILE_SCALING,
+                                                     use_spatial_hash=True)
+
+        self.scenery_list = ar.tilemap.process_layer(my_map,
+                                                     layer_name='Foreground Objects',
                                                      scaling=TILE_SCALING,
                                                      use_spatial_hash=True)
 
@@ -325,6 +345,19 @@ class GameView(ar.View):
         if (key == ar.key.D or key == ar.key.RIGHT):
             self.right_pressed = True
 
+        # keys below are toggles for debugging purposes (drawing hitboxes, etc)
+        if key == ar.key.L and not self.l_pressed:
+            self.l_pressed = True
+
+        elif key == ar.key.L and self.l_pressed:
+            self.l_pressed = False
+
+        if key == ar.key.K:
+            self.k_pressed = True
+
+        elif key == ar.key.K and self.k_pressed:
+            self.k_pressed = False
+
 
     def handle_key_press(self):
         """
@@ -381,8 +414,6 @@ class GameView(ar.View):
                 # if self.physics_engine.can_jump():
                 #     self.player.change_y = JUMP_SPEED
                 #     self.player.jumping = True
-
-
 
         self.physics_engine.step()
 
@@ -535,11 +566,22 @@ class GameView(ar.View):
         self.player_list.draw()
         self.wall_list.draw()
         self.enemies_list.draw()
+        self.scenery_list.draw()
+
+        # draw hitboxes for walls
+        if self.l_pressed:
+            for wall in self.wall_list:
+                wall.draw_hit_box(RED_COLOR)
+
+        # draw player hitboxes
+        if self.k_pressed:
+            self.player.draw_hit_box(RED_COLOR)
 
         # get player x/y velocity from the physics engine ([x,y])
         player_velocities = self.physics_engine.get_physics_object(self.player).body.velocity
         velocity_x = player_velocities[0]
         velocity_y = player_velocities[1]
+        is_on_ground = self.physics_engine.is_on_ground(self.player)
 
         msg = self.end_of_map
         msg2 = self.player.crouching
@@ -548,7 +590,7 @@ class GameView(ar.View):
         msg5 = velocity_y
         msg6 = self.player.jumping
         msg7 = self.player.center_x
-        msg8 = self.player.y_odometer
+        msg8 = is_on_ground
 
         output = f"Map width: {msg:.2f}"
         output2 = f"Is crouching: {msg2}"
@@ -557,7 +599,7 @@ class GameView(ar.View):
         # output5 = f"Player Y vel: {msg5:.2f}"
         output6 = f"Player Jumping?: {msg6}"
         output7 = f"Player X pos?: {msg7:.1f}"
-        output8 = f"Player Y odometer: {msg8:.1f}"
+        output8 = f"Player on ground?: {msg8}"
 
         ar.draw_text(text=output,
                      start_x=self.view_left + 20,
@@ -594,11 +636,11 @@ class GameView(ar.View):
                      start_y=self.view_bottom + (SCREEN_HEIGHT - 145),
                      font_size=18,
                      color=ar.color.WHITE)
-        # ar.draw_text(text=output8,
-        #              start_x=self.view_left + 20,
-        #              start_y=self.view_bottom + (SCREEN_HEIGHT - 165),
-        #              font_size=18,
-        #              color=ar.color.WHITE)
+        ar.draw_text(text=output8,
+                     start_x=self.view_left + 20,
+                     start_y=self.view_bottom + (SCREEN_HEIGHT - 165),
+                     font_size=18,
+                     color=ar.color.WHITE)
 
 def run_game():
     window = ar.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
