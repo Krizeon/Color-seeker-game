@@ -3,11 +3,17 @@
 
 This game is a passion project that came about after hours of indulging in a variety of hobbies, including drawing, painting, coding in Python, watching tech videos on Youtube, and playing instruments. After some time of thinking, "what can I do that allows me to combine most my interests into one workable package?" I decided that I could work on a simple 2D platformer game! It's simple, really: there is code to be written, assets to be rendered, sounds to be created, and levels to be designed! To combine most of my interests into one, this should be fun.
 
-The name "Color Seeker" is a working title. It is a hint to what the gameplay will be like in the future. 
+The name "Color Seeker" is a working title. It is a hint to what the gameplay will be like in the future (Puzzles, revealing hidden platforms, etc). 
 
-Color Seeker is coded in Python 3.8 primarily using the Arcade module. The structure of the code is Object-Oriented with Player, Window, View and Game objects. 
+Color Seeker is coded in Python 3.8 primarily using the Arcade module. The structure of the code is Object-Oriented with Player, Window, View and Game objects. The player progresses through levels linearly, getting color keys to activate hidden platforms while avoiding dangerous obstacles. Game levels are designed and created in Tiled using original spritesheets. The main code loads the resulting .tmx levels into the window, where the user can then control the player character. 
 
-Here's a quick screenshot of how it looks as of early October:
-![Color Seeker game screenshot](https://github.com/Krizeon/Color-seeker-game/blob/master/early%20game%20snip.png)
+Here's a quick screenshot of how it looks as of late October:
+![Color Seeker game screenshot](https://github.com/Krizeon/Color-seeker-game/blob/master/game%20screenshot.png)
+
+All assets in the screenshot above have been drawn by me in Adobe Photoshop. The player character (in grey) has animations when being controlled via WASD or Arrow keys, most notably a 14-frame walking animation. More animations are to come in time for enemy characters as well. Game tile design is still in an iterative phase, so what you see in the screenshot above may be subject to change in the future. There are also non-interactive detail assets also being designed to furnish the game world with more life, such as alien-looking trees and tall grass. 
+
+If you are interested in which other features and enhancements are being planned, check out the Issues tab!
+
+
  
  
