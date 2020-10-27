@@ -25,6 +25,9 @@ GRID_PIXEL_SIZE = (SPRITE_PIXEL_SIZE * TILE_SCALING)
 #RGBA color constants
 DEFAULT_COLOR = [255,255,255,255] # white
 RED_COLOR = [255,0,0,255]
+BLUE_COLOR = [0,0,255,255]
+LIGHT_BLUE_COLOR = [102,153,255,255]
+
 
 # time in milliseconds until player may take damage again
 DAMAGE_BUFFER_TIME = 1000
@@ -79,7 +82,7 @@ PLAYER_MOVE_FORCE_IN_AIR = 100
 PLAYER_JUMP_IMPULSE = 1200
 
 # boundaries of the viewport box, relative to the screen window's resolution
-VIEWPORT_MARGIN_TOP = 100
+VIEWPORT_MARGIN_TOP = 200
 VIEWPORT_MARGIN_BOTTOM = 200
 VIEWPORT_RIGHT_MARGIN = 500
 VIEWPORT_LEFT_MARGIN = 300

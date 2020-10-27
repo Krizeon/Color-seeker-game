@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.4" tiledversion="1.4.2" orientation="orthogonal" renderorder="right-down" width="30" height="12" tilewidth="128" tileheight="128" infinite="0" nextlayerid="9" nextobjectid="24">
+<map version="1.4" tiledversion="1.4.2" orientation="orthogonal" renderorder="right-down" width="30" height="12" tilewidth="128" tileheight="128" infinite="0" nextlayerid="12" nextobjectid="25">
  <tileset firstgid="1" source="colorful_spritesheet.tsx"/>
  <tileset firstgid="17" source="enemy1.tsx"/>
  <layer id="1" name="Foreground" width="30" height="12">
@@ -18,11 +18,6 @@
 9,0,9,9,9,9,9,9,6,6,6,6,6,6,6,12,13,1,1,1,1,9,6,6,6,6,6,6,6,6
 </data>
  </layer>
- <objectgroup id="3" name="Player Spawn">
-  <object id="3" x="502.667" y="773.333">
-   <point/>
-  </object>
- </objectgroup>
  <objectgroup id="7" name="Enemies">
   <properties>
    <property name="boundary_left" type="int" value="0"/>
@@ -47,5 +42,8 @@
     <property name="change_x" type="int" value="-1"/>
    </properties>
   </object>
+ </objectgroup>
+ <objectgroup id="11" name="Player Spawn">
+  <object id="24" gid="16" x="382.667" y="1280" width="128" height="128"/>
  </objectgroup>
 </map>

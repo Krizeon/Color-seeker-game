@@ -189,6 +189,10 @@ class GameView(ar.View):
         self.wall_list = None # list of walls that an object can collide with
         self.scenery_list = None
         self.all_sprites = ar.SpriteList() # the list of sprites on the screen
+        self.keys_list = None
+        self.hidden_platform_list = None
+        self.background = None
+
         self.score = 0 # the player score
         self.player = None # the player object
         self.physics_engine = None # the physics engine object
@@ -196,6 +200,8 @@ class GameView(ar.View):
         self.message = None # message for debug purposes
         self.end_of_map = 0
         self.top_of_map = 0
+        self.player_teleported = False
+        self.current_map = None
 
         # controls
         self.left_pressed = False
@@ -215,19 +221,16 @@ class GameView(ar.View):
         ar.set_background_color(ar.color.BLACK)
 
         self.player_list = ar.SpriteList()
-
-        # Set up the player
+        self.level = 6
         self.player = PlayerCharacter()
 
-        self.player.center_y = 500
-        self.player.center_x = 200
+        # Set up the player
+        self.load_level(self.level)
+        self.background = arcade.load_texture(":resources:images/backgrounds/abstract_1.jpg")
+
         self.player.health = 99
         self.player.color = DEFAULT_COLOR
         self.player_list.append(self.player)
-        self.player.spawnpoint = [100, 200]
-        self.level = 1
-
-        self.load_level(self.level)
 
         # check if there is a "game over"
         self.game_over = False
@@ -248,6 +251,29 @@ class GameView(ar.View):
         gravity = (0, -GRAVITY)
         self.physics_engine = ar.PymunkPhysicsEngine(damping=damping,
                                                      gravity=gravity)
+
+        self.current_map = ar.tilemap.read_tmx(f"maps/map{level}.tmx")
+        self.height = self.current_map.map_size.height
+        self.width = self.current_map.map_size.width
+        self.end_of_map = self.current_map.map_size.width * GRID_PIXEL_SIZE
+        self.top_of_map = self.current_map.map_size.height * GRID_PIXEL_SIZE
+
+        self.keys_list = ar.tilemap.process_layer(self.current_map,
+                                                     layer_name='Color Orbs',
+                                                     scaling=SPRITE_SCALING,
+                                                     use_spatial_hash=True)
+
+        # find the player spawnpoint in the .tmx map
+        player_location = ar.tilemap.process_layer(self.current_map,
+                                                     layer_name='Player Spawn',
+                                                     scaling=SPRITE_SCALING,
+                                                     use_spatial_hash=True)
+
+        # handle setting the player spawnpoint
+        for location in player_location:
+            self.player.spawnpoint = int(location.center_x), int(location.center_y)
+            self.player.center_x, self.player.center_y = self.player.spawnpoint
+
         self.physics_engine.add_sprite(self.player,
                                        friction=PLAYER_FRICTION,
                                        mass=PLAYER_MASS,
@@ -256,23 +282,18 @@ class GameView(ar.View):
                                        max_horizontal_velocity=PLAYER_MAX_HORIZONTAL_SPEED,
                                        max_vertical_velocity=PLAYER_MAX_VERTICAL_SPEED)
 
-        my_map = ar.tilemap.read_tmx(f"maps/map{level}.tmx")
-        self.height = my_map.map_size.height
-        self.width = my_map.map_size.width
-        self.end_of_map = my_map.map_size.width * GRID_PIXEL_SIZE
-        self.top_of_map = my_map.map_size.height * GRID_PIXEL_SIZE
-        self.wall_list = ar.tilemap.process_layer(my_map,
+        self.wall_list = ar.tilemap.process_layer(self.current_map,
                                                   layer_name='Foreground',
                                                   scaling=TILE_SCALING,
                                                   use_spatial_hash=False,
                                                   hit_box_algorithm="Detailed")
 
-        self.enemies_list = ar.tilemap.process_layer(my_map,
+        self.enemies_list = ar.tilemap.process_layer(self.current_map,
                                                      layer_name='Enemies',
-                                                     scaling=TILE_SCALING,
+                                                     scaling=SPRITE_SCALING,
                                                      use_spatial_hash=True)
 
-        self.scenery_list = ar.tilemap.process_layer(my_map,
+        self.scenery_list = ar.tilemap.process_layer(self.current_map,
                                                      layer_name='Foreground Objects',
                                                      scaling=TILE_SCALING,
                                                      use_spatial_hash=True)
@@ -287,10 +308,35 @@ class GameView(ar.View):
                                             body_type=ar.PymunkPhysicsEngine.KINEMATIC,
                                             collision_type="enemy")
 
+        self.physics_engine.add_sprite_list(self.keys_list,
+                                            mass=1,
+                                            body_type=ar.PymunkPhysicsEngine.KINEMATIC,
+                                            collision_type="wall")
 
-        spawn_coords = ar.get_tilemap_layer(map_object=my_map, layer_path="Player Spawn")
+
+        spawn_coords = ar.get_tilemap_layer(map_object=self.current_map, layer_path="Player Spawn")
         self.view_left = 0
         self.view_bottom = 0
+
+
+    def load_layer(self, layer_name, color):
+        """
+        load a new layer from a loaded map
+        :param layer_name: name of layer in the current map
+        :param color: an RGBA color list
+        :return: n/a
+        """
+        self.hidden_platform_list = ar.tilemap.process_layer(self.current_map,
+                                                  layer_name=layer_name,
+                                                  scaling=TILE_SCALING,
+                                                  use_spatial_hash=True)
+        for platform in self.hidden_platform_list:
+            platform.color = color
+
+        self.physics_engine.add_sprite_list(self.hidden_platform_list,
+                                            friction=WALL_FRICTION,
+                                            collision_type="wall",
+                                            body_type=ar.PymunkPhysicsEngine.STATIC)
 
 
     def on_key_release(self, key: int, modifiers: int):
@@ -350,13 +396,11 @@ class GameView(ar.View):
         # keys below are toggles for debugging purposes (drawing hitboxes, etc)
         if key == ar.key.L and not self.l_pressed:
             self.l_pressed = True
-
         elif key == ar.key.L and self.l_pressed:
             self.l_pressed = False
 
-        if key == ar.key.K:
+        if key == ar.key.K and not self.k_pressed:
             self.k_pressed = True
-
         elif key == ar.key.K and self.k_pressed:
             self.k_pressed = False
 
@@ -447,10 +491,10 @@ class GameView(ar.View):
 
             # if player dies (runs out of health), respawn at the beginning of the level
         if self.player.health <= 0:
-            self.player.change_x = 0
-            self.player.change_y = 0
+            self.player_teleported = True
             self.physics_engine.set_position(self.player, self.player.spawnpoint)
             self.player.health = 99
+
 
     def track_moving_enemies(self, delta_time):
         # For each moving sprite, see if we've reached a boundary and need to
@@ -475,6 +519,7 @@ class GameView(ar.View):
             velocity = (enemy_sprite.change_x * 1 / delta_time, enemy_sprite.change_y * 1 / delta_time)
             self.physics_engine.set_velocity(enemy_sprite, velocity)
 
+
     def on_update(self, delta_time: float):
         """
         Update the positions and statuses of all game objects
@@ -488,35 +533,29 @@ class GameView(ar.View):
 
         # Update everything
         self.player_list.update()
-        # self.player_list.update_animation()
         self.all_sprites.update()
         self.enemies_list.update()
 
         self.process_damage()
         self.track_moving_enemies(delta_time)
+        if ar.check_for_collision_with_list(self.player, self.keys_list):
+            self.load_layer("Hidden Platforms", LIGHT_BLUE_COLOR)
 
         # if player gets to the right edge of the level, go to next level
         if self.player.right >= self.end_of_map:
             self.level += 1 # switch to next level
+            self.player_teleported = True
             self.physics_engine.set_horizontal_velocity(self.player, 0)
             self.load_level(self.level)
-            if self.level == 2:
-                self.player.spawnpoint = [100, 200]
-            elif self.level == 3:
-                self.player.spawnpoint = [50, 300]
             self.physics_engine.set_position(self.player, self.player.spawnpoint)
 
         # if the player hits the bottom of the level, player dies and respawns at the start of the level
         if self.player.bottom <= 0:
+            # self.level += 1 # switch to next level
+            self.player_teleported = True
             self.physics_engine.set_horizontal_velocity(self.player, 0)
-            self.level += 1 # switch to next level
-            self.load_level(self.level)
-            if self.level == 2:
-                self.player.spawnpoint = [100, 100]
-                self.physics_engine.set_position(self.player, self.player.spawnpoint)
-            elif self.level == 3:
-                self.player.spawnpoint = [50, 300]
-                self.physics_engine.set_position(self.player, self.player.spawnpoint)
+            # self.load_level(self.level)
+            self.physics_engine.set_position(self.player, self.player.spawnpoint)
 
         if self.physics_engine.is_on_ground(self.player) and self.player.jumping:
             self.player.jumping = False
@@ -549,13 +588,16 @@ class GameView(ar.View):
             changed = True
 
         # If we need to scroll, go ahead and do it.
-        if changed:
+        # also change viewport when player has teleported (when switching levels, respawning, etc)
+        if changed or self.player_teleported:
             self.view_left = int(self.view_left)
             self.view_bottom = int(self.view_bottom)
             ar.set_viewport(self.view_left,
                                 SCREEN_WIDTH + self.view_left,
                                 self.view_bottom,
                                 SCREEN_HEIGHT + self.view_bottom)
+
+        self.player_teleported = False
 
 
     def on_draw(self):
@@ -569,80 +611,93 @@ class GameView(ar.View):
         self.wall_list.draw()
         self.enemies_list.draw()
         self.scenery_list.draw()
+        self.keys_list.draw()
+        if self.hidden_platform_list:
+            self.hidden_platform_list.draw()
+        # self.player.draw()
 
         # draw hitboxes for walls
         if self.l_pressed:
             for wall in self.wall_list:
                 wall.draw_hit_box(RED_COLOR)
 
-        # draw player hitboxes
+        # draw player hitboxes and debug info
         if self.k_pressed:
             self.player.draw_hit_box(RED_COLOR)
 
-        # get player x/y velocity from the physics engine ([x,y])
-        player_velocities = self.physics_engine.get_physics_object(self.player).body.velocity
-        velocity_x = player_velocities[0]
-        velocity_y = player_velocities[1]
-        is_on_ground = self.physics_engine.is_on_ground(self.player)
+            # get player x/y velocity from the physics engine ([x,y])
+            player_velocities = self.physics_engine.get_physics_object(self.player).body.velocity
+            velocity_x = player_velocities[0]
+            velocity_y = player_velocities[1]
+            is_on_ground = self.physics_engine.is_on_ground(self.player)
 
-        msg = self.end_of_map
-        msg2 = self.player.crouching
+            msg = self.end_of_map
+            msg2 = self.player.crouching
+            msg3 = self.player.health
+            msg4 = velocity_x
+            msg5 = velocity_y
+            msg6 = self.player.jumping
+            msg7 = self.player.center_x
+            msg8 = is_on_ground
+
+            output = f"Map width: {msg:.2f}"
+            output2 = f"Is crouching: {msg2}"
+            output3 = f"HP: {msg3:.2f}"
+            output4 = f"Player X vel: {msg4:.2f}"
+            output5 = f"Player Y vel: {msg5:.2f}"
+            output6 = f"Player Jumping?: {msg6}"
+            output7 = f"Player X pos?: {msg7:.1f}"
+            output8 = f"Player on ground?: {msg8}"
+
+            ar.draw_text(text=output,
+                         start_x=self.view_left + 20,
+                         start_y=self.view_bottom + (SCREEN_HEIGHT - 25),
+                         font_size= 18,
+                         color=ar.color.WHITE)
+            ar.draw_text(text=output2,
+                         start_x=self.view_left + 20,
+                         start_y=self.view_bottom + (SCREEN_HEIGHT - 45),
+                         font_size=18,
+                         color=ar.color.WHITE)
+            ar.draw_text(text=output3,
+                         start_x=self.view_left + 20,
+                         start_y=self.view_bottom + (SCREEN_HEIGHT - 65),
+                         font_size=18,
+                         color=ar.color.WHITE)
+            ar.draw_text(text=output4,
+                         start_x=self.view_left + 20,
+                         start_y=self.view_bottom + (SCREEN_HEIGHT - 85),
+                         font_size=18,
+                         color=ar.color.WHITE)
+            ar.draw_text(text=output5,
+                         start_x=self.view_left + 20,
+                         start_y=self.view_bottom + (SCREEN_HEIGHT - 105),
+                         font_size=18,
+                         color=ar.color.WHITE)
+            ar.draw_text(text=output6,
+                         start_x=self.view_left + 20,
+                         start_y=self.view_bottom + (SCREEN_HEIGHT - 125),
+                         font_size=18,
+                         color=ar.color.WHITE)
+            ar.draw_text(text=output7,
+                         start_x=self.view_left + 20,
+                         start_y=self.view_bottom + (SCREEN_HEIGHT - 145),
+                         font_size=18,
+                         color=ar.color.WHITE)
+            ar.draw_text(text=output8,
+                         start_x=self.view_left + 20,
+                         start_y=self.view_bottom + (SCREEN_HEIGHT - 165),
+                         font_size=18,
+                         color=ar.color.WHITE)
+
         msg3 = self.player.health
-        msg4 = velocity_x
-        msg5 = velocity_y
-        msg6 = self.player.jumping
-        msg7 = self.player.center_x
-        msg8 = is_on_ground
-
-        output = f"Map width: {msg:.2f}"
-        output2 = f"Is crouching: {msg2}"
         output3 = f"HP: {msg3:.2f}"
-        output4 = f"Player X vel: {msg4:.2f}"
-        # output5 = f"Player Y vel: {msg5:.2f}"
-        output6 = f"Player Jumping?: {msg6}"
-        output7 = f"Player X pos?: {msg7:.1f}"
-        output8 = f"Player on ground?: {msg8}"
-
-        ar.draw_text(text=output,
-                     start_x=self.view_left + 20,
-                     start_y=self.view_bottom + (SCREEN_HEIGHT - 25),
-                     font_size= 18,
-                     color=ar.color.WHITE)
-        ar.draw_text(text=output2,
-                     start_x=self.view_left + 20,
-                     start_y=self.view_bottom + (SCREEN_HEIGHT - 45),
-                     font_size=18,
-                     color=ar.color.WHITE)
         ar.draw_text(text=output3,
                      start_x=self.view_left + 20,
                      start_y=self.view_bottom + (SCREEN_HEIGHT - 65),
                      font_size=18,
                      color=ar.color.WHITE)
-        ar.draw_text(text=output4,
-                     start_x=self.view_left + 20,
-                     start_y=self.view_bottom + (SCREEN_HEIGHT - 85),
-                     font_size=18,
-                     color=ar.color.WHITE)
-        # ar.draw_text(text=output5,
-        #              start_x=self.view_left + 20,
-        #              start_y=self.view_bottom + (SCREEN_HEIGHT - 105),
-        #              font_size=18,
-        #              color=ar.color.WHITE)
-        ar.draw_text(text=output6,
-                     start_x=self.view_left + 20,
-                     start_y=self.view_bottom + (SCREEN_HEIGHT - 125),
-                     font_size=18,
-                     color=ar.color.WHITE)
-        ar.draw_text(text=output7,
-                     start_x=self.view_left + 20,
-                     start_y=self.view_bottom + (SCREEN_HEIGHT - 145),
-                     font_size=18,
-                     color=ar.color.WHITE)
-        ar.draw_text(text=output8,
-                     start_x=self.view_left + 20,
-                     start_y=self.view_bottom + (SCREEN_HEIGHT - 165),
-                     font_size=18,
-                     color=ar.color.WHITE)
+
 
 def run_game():
     window = ar.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
