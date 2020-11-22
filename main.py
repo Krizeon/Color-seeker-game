@@ -8,6 +8,7 @@ import time
 # going to be used in this file, so we import all of them!
 import views
 from constants import *
+from player import *
 
 class Rectangle:
     """
@@ -27,166 +28,10 @@ class Rectangle:
         self.center_y = 0
         self.width = SCREEN_WIDTH * 2
         self.height = SCREEN_HEIGHT
-        self.change_x = SCREEN_WIDTH / 60
+        self.change_x = SCREEN_WIDTH / 20
         self.change_y = SCREEN_WIDTH / 30
         self.color = ar.color.AZURE
 
-
-class PlayerCharacter(ar.Sprite):
-    """
-    the main player object. it is based on an Arcade Sprite object.
-    """
-    def __init__(self):
-        # set up parent class
-        super().__init__()
-
-        self._hit_box_algorithm="None"
-        self.character_face_direction = RIGHT_FACING
-        self.cur_texture = 0
-        self.spawnpoint = [0,0]
-        self.health = 0
-        self.default_color = [255,255,255,255]
-        self.color = [0,0,0,0] # color is RGBA, 4th int being opacity between 0-255
-        self.took_damage = False
-        self.time_last_hit = 0
-        self.crouching = False
-        self.default_points = [[-40, -60], [40, -60], [40, 50], [-40, 50]]
-
-        self.jumping = False
-        self.scale = SPRITE_SCALING
-
-        # How far have we traveled horizontally since changing the texture
-        self.x_odometer = 0
-
-        # How far have we traveled vertically since changing the texture
-        self.y_odometer = 0
-
-        main_path = "sprites/player_sprites/player"
-
-        # add idle texture
-        self.idle_texture_pair = ar.load_texture_pair(f"{main_path}_idle.png")
-
-        # add crouching texture
-        self.crouching_texture_pair = ar.load_texture_pair(f"{main_path}_squished.png", hit_box_algorithm="None")
-
-        #add jumping texture
-        self.jumping_texture_pair = ar.load_texture_pair(f"{main_path}_jumping.png")
-
-        # add walking sprites to list
-        self.walking_textures = []
-        for i in range(1, 15):
-            texture = ar.load_texture_pair(f"{main_path}walking{i}.png")
-            self.walking_textures.append(texture)
-
-        self.texture = self.idle_texture_pair[0]
-        self.set_hit_box(self.texture.hit_box_points)
-        # self.height = 20
-
-
-    def pymunk_moved(self, physics_engine, dx, dy, d_angle):
-        """
-        handle animation when pymunk detects the player is moving
-        :param physics_engine: Pymunk physics engine
-        :param dx: current x velocity
-        :param dy: current y velocity
-        :param d_angle: current angle
-        :return: n/a (used to end function)
-        """
-        # figure if we need to flip left or right
-        if dx < 0 and self.character_face_direction == RIGHT_FACING:
-            self.character_face_direction = LEFT_FACING
-        if dx > 0 and self.character_face_direction == LEFT_FACING:
-            self.character_face_direction = RIGHT_FACING
-
-        # Are we on the ground?
-        is_on_ground = physics_engine.is_on_ground(self)
-
-        # Add to the odometer how far we've moved
-        self.x_odometer += dx
-        self.y_odometer += dy
-
-        # change to crouching sprite if holding DOWN or S
-        if self.crouching and is_on_ground:
-            self.texture = self.crouching_texture_pair[self.character_face_direction]
-            self.set_hit_box(self.texture.hit_box_points)
-
-            shape = physics_engine.get_physics_object(sprite=self).shape
-
-            # poly = self.get_hit_box()
-            # scaled_poly = [[x * self.scale for x in z] for z in poly]
-            # shape = pm.Poly(body, scaled_poly)
-            # print(physics_engine.get_sprite_for_shape(shape))
-            print(shape)
-            # physics_engine.get_physics_object(sprite=self).shape = shape
-            # self.hit_box = self.texture.hit_box_points
-            return
-
-        # idle texture
-        if abs(dx) <= DEAD_ZONE and not self.jumping:
-            self.texture = self.idle_texture_pair[self.character_face_direction]
-            self.set_hit_box(self.texture.hit_box_points)
-            return
-
-        # jumping texture
-        if self.jumping:
-            self.texture = self.jumping_texture_pair[self.character_face_direction]
-            self.set_hit_box(self.texture.hit_box_points)
-            # self.hit_box = self.texture.hit_box_points
-            return
-
-        # walking animation
-        if abs(self.x_odometer) > DISTANCE_TO_CHANGE_TEXTURE:
-            self.x_odometer = 0
-            # do the walking animation
-            self.cur_texture += 13
-            if self.cur_texture > 13 * UPDATES_PER_FRAME:
-                self.cur_texture = 0
-            self.texture = self.walking_textures[self.cur_texture // UPDATES_PER_FRAME][self.character_face_direction]
-
-class Enemy():
-    """
-    This class was supposed to be similar to Player, but is now defunct. Will probably
-    delete soon and make an inherited version from Player class soon.
-    """
-    def __init__(self):
-        # set up parent class
-        super().__init__()
-        self.character_face_direction = LEFT_FACING
-        self.cur_texture = 0
-        self.spawnpoint = [0,0]
-
-        self.jumping = False
-        self.scale = SPRITE_SCALING
-
-        main_path = "sprites/greenguy_walking"
-        self.idle_texture_pair = ar.load_texture_pair(f"{main_path}1.png")
-
-        # Adjust the collision box. Default includes too much empty space
-        # side-to-side. Box is centered at sprite center, (0, 0)
-        self.points = [[-75, -100], [80, -100], [80, 100], [-75, 100]]
-
-        # add walking sprites to list
-        self.walking_textures = []
-        for i in range(1,6):
-            texture = ar.load_texture_pair(f"{main_path}{i}.png")
-            self.walking_textures.append(texture)
-
-    def update_animation(self, delta_time: float = 1/60):
-        # figure if we need to flip left or right
-        if self.change_x < 0 and self.character_face_direction == RIGHT_FACING:
-            self.character_face_direction = LEFT_FACING
-        if self.change_x > 0 and self.character_face_direction == LEFT_FACING:
-            self.character_face_direction = RIGHT_FACING
-
-        if self.change_x == 0 and self.change_y == 0:
-            self.texture = self.idle_texture_pair[self.character_face_direction]
-            return
-
-        # walking animation
-        self.cur_texture += 1
-        if self.cur_texture > 4 * UPDATES_PER_FRAME:
-            self.cur_texture = 0
-        self.texture = self.walking_textures[self.cur_texture // UPDATES_PER_FRAME][self.character_face_direction]
 
 class GameView(ar.View):
     """
@@ -238,8 +83,9 @@ class GameView(ar.View):
         # Set the background color
         ar.set_background_color(ar.color.BLACK)
 
-        self.screen_wipe_rect = Rectangle()
-        self.screen_wipe_rect.setup()
+        # uncomment to debug the screen wipe transition
+        # self.screen_wipe_rect = Rectangle()
+        # self.screen_wipe_rect.setup()
 
         self.player_list = ar.SpriteList()
         self.level = 5
@@ -349,11 +195,6 @@ class GameView(ar.View):
                                      )
 
 
-        # self.screen_wipe_rect = ar.draw_rectangle_filled(0, SCREEN_HEIGHT/2, SCREEN_WIDTH, SCREEN_HEIGHT, ar.color.AZURE)
-        # self.screen_wipe_rect
-        # self.screen_wipe_rect
-
-
     def load_layer(self, layer_name, color):
         """
         load a new layer from a loaded map
@@ -449,65 +290,65 @@ class GameView(ar.View):
         :return: a game action for any given key press (player
         movement, pause game, quit game, etc)
         """
-        # sliding and moving at the same time!
-        if (self.down_pressed and self.right_pressed) or (self.down_pressed and self.left_pressed):
-            if self.physics_engine.is_on_ground(self.player) and not self.player.jumping:
-                self.player.crouching = True
-                # smoothly slide down a hill
-                self.physics_engine.set_friction(self.player, 0.2)
-                # slide using leftover momentum from running left or right
+        if not self.screen_wipe_rect:
+            # sliding and moving at the same time!
+            if self.down_pressed: #(self.down_pressed and self.right_pressed) or (self.down_pressed and self.left_pressed):
+                if self.physics_engine.is_on_ground(self.player) and not self.player.jumping:
+                    self.player.crouching = True
+                    # smoothly slide down a hill
+                    self.physics_engine.set_friction(self.player, 0.2)
+                    # slide using leftover momentum from running left or right
 
-        # # move left
-        # elif self.left_pressed:
-        #     if not self.player.crouching:
-        #         # Create a force to the left. Apply it.
-        #         force = (-PLAYER_MOVE_FORCE_ON_GROUND, 0)
-        #         self.physics_engine.apply_force(self.player, force)
-        #         # Set friction to zero for the player while moving
-        #         self.physics_engine.set_friction(self.player, 0.0)
-        #
-        # # move right
-        # elif self.right_pressed:
-        #     if not self.player.crouching:
-        #         # Create a force to the right. Apply it.
-        #         force = (PLAYER_MOVE_FORCE_ON_GROUND, 0)
-        #         self.physics_engine.apply_force(self.player, force)
-        #         # Set friction to zero for the player while moving
-        #         self.physics_engine.set_friction(self.player, 0.0)
+            # # move left
+            # elif self.left_pressed:
+            #     if not self.player.crouching:
+            #         # Create a force to the left. Apply it.
+            #         force = (-PLAYER_MOVE_FORCE_ON_GROUND, 0)
+            #         self.physics_engine.apply_force(self.player, force)
+            #         # Set friction to zero for the player while moving
+            #         self.physics_engine.set_friction(self.player, 0.0)
+            #
+            # # move right
+            # elif self.right_pressed:
+            #     if not self.player.crouching:
+            #         # Create a force to the right. Apply it.
+            #         force = (PLAYER_MOVE_FORCE_ON_GROUND, 0)
+            #         self.physics_engine.apply_force(self.player, force)
+            #         # Set friction to zero for the player while moving
+            #         self.physics_engine.set_friction(self.player, 0.0)
 
-        # jump up
-        if self.up_pressed:
-            if not self.player.crouching:
-                if self.physics_engine.is_on_ground(self.player):
-                    impulse = (0, PLAYER_JUMP_IMPULSE)
-                    self.physics_engine.apply_impulse(self.player, impulse)
+            # jump up
+            if self.up_pressed:
+                if not self.player.crouching:
                     self.player.jumping = True
+                    if self.physics_engine.is_on_ground(self.player):
+                        impulse = (0, PLAYER_JUMP_IMPULSE)
+                        self.physics_engine.apply_impulse(self.player, impulse)
 
-        is_on_ground = self.physics_engine.is_on_ground(self.player)
-        # Update player forces based on keys pressed
-        if self.left_pressed and not self.right_pressed:
-            # Create a force to the left. Apply it.
-            if is_on_ground:
-                force = (-PLAYER_MOVE_FORCE_ON_GROUND, 0)
-            else:
-                force = (-PLAYER_MOVE_FORCE_IN_AIR, 0)
-            self.physics_engine.apply_force(self.player, force)
-            # Set friction to zero for the player while moving
-            self.physics_engine.set_friction(self.player, 0)
-        elif self.right_pressed and not self.left_pressed:
-            # Create a force to the right. Apply it.
-            if is_on_ground:
-                force = (PLAYER_MOVE_FORCE_ON_GROUND, 0)
-            else:
-                force = (PLAYER_MOVE_FORCE_IN_AIR, 0)
-            self.physics_engine.apply_force(self.player, force)
-            # Set friction to zero for the player while moving
-            self.physics_engine.set_friction(self.player, 0)
-        else:
-            # Player's feet are not moving. Therefore up the friction so we stop.
-            self.physics_engine.set_friction(self.player, 1.0)
 
-        self.physics_engine.step()
+            is_on_ground = self.physics_engine.is_on_ground(self.player)
+            # Update player forces based on keys pressed
+            if self.left_pressed and not self.right_pressed:
+                # Create a force to the left. Apply it.
+                if is_on_ground:
+                    force = (-PLAYER_MOVE_FORCE_ON_GROUND, 0)
+                else:
+                    force = (-PLAYER_MOVE_FORCE_IN_AIR, 0)
+                self.physics_engine.apply_force(self.player, force)
+                # Set friction to zero for the player while moving
+                self.physics_engine.set_friction(self.player, 0)
+            elif self.right_pressed and not self.left_pressed:
+                # Create a force to the right. Apply it.
+                if is_on_ground:
+                    force = (PLAYER_MOVE_FORCE_ON_GROUND, 0)
+                else:
+                    force = (PLAYER_MOVE_FORCE_IN_AIR, 0)
+                self.physics_engine.apply_force(self.player, force)
+                # Set friction to zero for the player while moving
+                self.physics_engine.set_friction(self.player, 0)
+            else:
+                # Player's feet are not moving. Therefore up the friction so we stop.
+                self.physics_engine.set_friction(self.player, 1.0)
 
 
     def process_damage(self):
@@ -517,6 +358,7 @@ class GameView(ar.View):
         :return: n/a
         """
         if self.player.took_damage == True:
+            # start cooldown until player can take damage again
             current_time = int(round(time.time() * 1000))
             if (current_time - self.player.time_last_hit) > DAMAGE_BUFFER_TIME:
                 self.player.took_damage = False
@@ -524,7 +366,7 @@ class GameView(ar.View):
                 self.player.change_x = 0
                 self.player.change_y = 0
 
-            # if player hits enemy, deduce health and knock them back
+        # if player hits enemy, deduce health and knock them back
         if (self.player.took_damage is False) and \
                 (ar.check_for_collision_with_list(self.player, self.enemies_list)):
             self.player.change_x = -5  # bounce player back
@@ -535,7 +377,7 @@ class GameView(ar.View):
             self.player.color = RED_COLOR  # tint the player red
             self.player.time_last_hit = int(round(time.time() * 1000))
 
-            # if player dies (runs out of health), respawn at the beginning of the level
+        # if player dies (runs out of health), respawn at the beginning of the level
         if self.player.health <= 0:
             self.screen_wipe_rect = Rectangle()
             self.screen_wipe_rect.setup()
@@ -574,13 +416,14 @@ class GameView(ar.View):
         If paused, do nothing
         :param delta_time: Time since the last update
         """
-        if not self.game_over:
+
+        if not self.game_over or not self.paused:
             self.physics_engine.step()
 
         self.handle_key_press()
 
         if self.screen_wipe_rect:
-            self.screen_wipe_rect.center_x += self.screen_wipe_rect.change_y
+            self.screen_wipe_rect.center_x += self.screen_wipe_rect.change_x
             self.screen_wipe_rect.center_y = self.view_bottom + (SCREEN_HEIGHT/2)
             if self.screen_wipe_rect.center_x > SCREEN_WIDTH * 2:
                 self.screen_wipe_rect = None
@@ -614,7 +457,7 @@ class GameView(ar.View):
             # self.level += 1 # switch to next level
             self.player_teleported = True
             self.physics_engine.set_horizontal_velocity(self.player, 0)
-            # self.load_level(self.level)
+            self.load_level(self.level)
             self.physics_engine.set_position(self.player, self.player.spawnpoint)
 
         if self.physics_engine.is_on_ground(self.player) and self.player.jumping:
@@ -681,9 +524,8 @@ class GameView(ar.View):
             self.hidden_platform_list.draw()
         # self.player.draw()
 
-        # if not self.screen_wipe_rect:
+        # draw the transition wipe when restarting or loading a new level
         self.screen_wipe()
-
 
         # draw hitboxes for walls
         if self.l_pressed:

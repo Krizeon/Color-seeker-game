@@ -44,7 +44,7 @@ UPDATES_PER_FRAME = 10 #may not be necessary anymore?
 
 # physics related constants below
 # gravity affects objects in the world. higher values, faster falling speeds
-GRAVITY = 980
+GRAVITY = 2400
 
 # damping is the percentage of velocity lost per second
 DEFAULT_DAMPING = 1.0
@@ -62,12 +62,12 @@ ENEMY_FRICTION = 0.9
 # friction of tiles that are deemed to be walls
 WALL_FRICTION = 0.8
 
-PLAYER_MOVE_FORCE_ON_GROUND = 7000
+PLAYER_MOVE_FORCE_ON_GROUND = 8000
 ENEMY_MOVE_FORCE_ON_GROUND = 8000
 
 # max x/y speeds
-PLAYER_MAX_HORIZONTAL_SPEED = 300
-PLAYER_MAX_VERTICAL_SPEED = 900
+PLAYER_MAX_HORIZONTAL_SPEED = 600
+PLAYER_MAX_VERTICAL_SPEED = 1300
 
 # close enough to not-moving to have the animation go to idle.
 DEAD_ZONE = 0.1
@@ -79,7 +79,7 @@ DISTANCE_TO_CHANGE_TEXTURE = 15
 PLAYER_MOVE_FORCE_IN_AIR = 3000
 
 # strength of a jump
-PLAYER_JUMP_IMPULSE = 1400
+PLAYER_JUMP_IMPULSE = 2000
 
 # boundaries of the viewport box, relative to the screen window's resolution
 VIEWPORT_MARGIN_TOP = 200
