@@ -25,6 +25,9 @@ GRID_PIXEL_SIZE = (SPRITE_PIXEL_SIZE * TILE_SCALING)
 #RGBA color constants
 DEFAULT_COLOR = [255,255,255,255] # white
 RED_COLOR = [255,0,0,255]
+BLUE_COLOR = [0,0,255,255]
+LIGHT_BLUE_COLOR = [102,153,255,255]
+
 
 # time in milliseconds until player may take damage again
 DAMAGE_BUFFER_TIME = 1000
@@ -41,7 +44,7 @@ UPDATES_PER_FRAME = 10 #may not be necessary anymore?
 
 # physics related constants below
 # gravity affects objects in the world. higher values, faster falling speeds
-GRAVITY = 980
+GRAVITY = 2400
 
 # damping is the percentage of velocity lost per second
 DEFAULT_DAMPING = 1.0
@@ -63,8 +66,8 @@ PLAYER_MOVE_FORCE_ON_GROUND = 8000
 ENEMY_MOVE_FORCE_ON_GROUND = 8000
 
 # max x/y speeds
-PLAYER_MAX_HORIZONTAL_SPEED = 300
-PLAYER_MAX_VERTICAL_SPEED = 900
+PLAYER_MAX_HORIZONTAL_SPEED = 600
+PLAYER_MAX_VERTICAL_SPEED = 1300
 
 # close enough to not-moving to have the animation go to idle.
 DEAD_ZONE = 0.1
@@ -73,10 +76,10 @@ DEAD_ZONE = 0.1
 DISTANCE_TO_CHANGE_TEXTURE = 15
 
 # force applied when moving left/right in the air
-PLAYER_MOVE_FORCE_IN_AIR = 900
+PLAYER_MOVE_FORCE_IN_AIR = 3000
 
 # strength of a jump
-PLAYER_JUMP_IMPULSE = 1200
+PLAYER_JUMP_IMPULSE = 2000
 
 # boundaries of the viewport box, relative to the screen window's resolution
 VIEWPORT_MARGIN_TOP = 200
