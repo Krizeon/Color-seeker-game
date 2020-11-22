@@ -9,16 +9,27 @@ import time
 import views
 from constants import *
 
+class Rectangle:
+    """
+    Class to keep track of a ball's location and vector.
+    """
+    def __init__(self):
+        self.center_x = 0
+        self.center_y = 0
+        self.width = 0
+        self.height = 0
+        self.change_x = 0
+        self.change_y = 0
+        self.color = None
 
-# def load_texture_pair(filename):
-#     """
-#     Load a texture pair, with the second being a mirror image.
-#     :param filename{string}: the name of a file
-#     """
-#     return [
-#         ar.load_texture(filename, can_cache=False),
-#         ar.load_texture(filename, can_cache=False, flipped_horizontally=True)
-#     ]
+    def setup(self):
+        self.center_x = -SCREEN_WIDTH
+        self.center_y = 0
+        self.width = SCREEN_WIDTH * 2
+        self.height = SCREEN_HEIGHT
+        self.change_x = SCREEN_WIDTH / 60
+        self.change_y = SCREEN_WIDTH / 30
+        self.color = ar.color.AZURE
 
 
 class PlayerCharacter(ar.Sprite):
@@ -32,8 +43,9 @@ class PlayerCharacter(ar.Sprite):
         self._hit_box_algorithm="None"
         self.character_face_direction = RIGHT_FACING
         self.cur_texture = 0
-        self.spawnpoint = [300,100]
+        self.spawnpoint = [0,0]
         self.health = 0
+        self.default_color = [255,255,255,255]
         self.color = [0,0,0,0] # color is RGBA, 4th int being opacity between 0-255
         self.took_damage = False
         self.time_last_hit = 0
@@ -103,7 +115,8 @@ class PlayerCharacter(ar.Sprite):
             # poly = self.get_hit_box()
             # scaled_poly = [[x * self.scale for x in z] for z in poly]
             # shape = pm.Poly(body, scaled_poly)
-            print(physics_engine.get_sprite_for_shape(shape))
+            # print(physics_engine.get_sprite_for_shape(shape))
+            print(shape)
             # physics_engine.get_physics_object(sprite=self).shape = shape
             # self.hit_box = self.texture.hit_box_points
             return
@@ -131,6 +144,10 @@ class PlayerCharacter(ar.Sprite):
             self.texture = self.walking_textures[self.cur_texture // UPDATES_PER_FRAME][self.character_face_direction]
 
 class Enemy():
+    """
+    This class was supposed to be similar to Player, but is now defunct. Will probably
+    delete soon and make an inherited version from Player class soon.
+    """
     def __init__(self):
         # set up parent class
         super().__init__()
@@ -192,6 +209,7 @@ class GameView(ar.View):
         self.keys_list = None
         self.hidden_platform_list = None
         self.background = None
+        self.screen_wipe_rect = None
 
         self.score = 0 # the player score
         self.player = None # the player object
@@ -220,13 +238,16 @@ class GameView(ar.View):
         # Set the background color
         ar.set_background_color(ar.color.BLACK)
 
+        self.screen_wipe_rect = Rectangle()
+        self.screen_wipe_rect.setup()
+
         self.player_list = ar.SpriteList()
-        self.level = 6
+        self.level = 5
         self.player = PlayerCharacter()
 
         # Set up the player
         self.load_level(self.level)
-        self.background = arcade.load_texture(":resources:images/backgrounds/abstract_1.jpg")
+        self.background = ar.load_texture("backgrounds/background1.png")
 
         self.player.health = 99
         self.player.color = DEFAULT_COLOR
@@ -239,6 +260,7 @@ class GameView(ar.View):
         self.paused = False
         self.collided = False
         self.collision_timer = 0.0
+
 
     def load_level(self, level):
         """
@@ -270,9 +292,8 @@ class GameView(ar.View):
                                                      use_spatial_hash=True)
 
         # handle setting the player spawnpoint
-        for location in player_location:
-            self.player.spawnpoint = int(location.center_x), int(location.center_y)
-            self.player.center_x, self.player.center_y = self.player.spawnpoint
+        self.player.spawnpoint = int(player_location[0].center_x), int(player_location[0].center_y)
+        self.player.center_x, self.player.center_y = self.player.spawnpoint
 
         self.physics_engine.add_sprite(self.player,
                                        friction=PLAYER_FRICTION,
@@ -314,9 +335,23 @@ class GameView(ar.View):
                                             collision_type="wall")
 
 
-        spawn_coords = ar.get_tilemap_layer(map_object=self.current_map, layer_path="Player Spawn")
         self.view_left = 0
         self.view_bottom = 0
+
+
+    def screen_wipe(self):
+        if self.screen_wipe_rect:
+            ar.draw_rectangle_filled(center_x=self.screen_wipe_rect.center_x,
+                                     center_y=self.screen_wipe_rect.center_y,
+                                     width=self.screen_wipe_rect.width,
+                                     height=self.screen_wipe_rect.height,
+                                     color=self.screen_wipe_rect.color
+                                     )
+
+
+        # self.screen_wipe_rect = ar.draw_rectangle_filled(0, SCREEN_HEIGHT/2, SCREEN_WIDTH, SCREEN_HEIGHT, ar.color.AZURE)
+        # self.screen_wipe_rect
+        # self.screen_wipe_rect
 
 
     def load_layer(self, layer_name, color):
@@ -422,33 +457,23 @@ class GameView(ar.View):
                 self.physics_engine.set_friction(self.player, 0.2)
                 # slide using leftover momentum from running left or right
 
-        # move left
-        elif self.left_pressed:
-            if not self.player.crouching:
-                # Create a force to the left. Apply it.
-                force = (-PLAYER_MOVE_FORCE_ON_GROUND, 0)
-                self.physics_engine.apply_force(self.player, force)
-                # Set friction to zero for the player while moving
-                self.physics_engine.set_friction(self.player, 0.0)
-
-        # move right
-        elif self.right_pressed:
-            if not self.player.crouching:
-                # Create a force to the right. Apply it.
-                force = (PLAYER_MOVE_FORCE_ON_GROUND, 0)
-                self.physics_engine.apply_force(self.player, force)
-                # Set friction to zero for the player while moving
-                self.physics_engine.set_friction(self.player, 0.0)
-
-        # crouch (squish in half)
-        elif self.down_pressed:
-            if self.physics_engine.is_on_ground(self.player) and not self.player.jumping:
-                self.player.crouching = True
-                # smoothly slide down a hill
-                self.physics_engine.set_friction(self.player, 0.2)
-        else:
-            # Player's feet are not moving. Therefore up the friction so we stop.
-            self.physics_engine.set_friction(self.player, 1.0)
+        # # move left
+        # elif self.left_pressed:
+        #     if not self.player.crouching:
+        #         # Create a force to the left. Apply it.
+        #         force = (-PLAYER_MOVE_FORCE_ON_GROUND, 0)
+        #         self.physics_engine.apply_force(self.player, force)
+        #         # Set friction to zero for the player while moving
+        #         self.physics_engine.set_friction(self.player, 0.0)
+        #
+        # # move right
+        # elif self.right_pressed:
+        #     if not self.player.crouching:
+        #         # Create a force to the right. Apply it.
+        #         force = (PLAYER_MOVE_FORCE_ON_GROUND, 0)
+        #         self.physics_engine.apply_force(self.player, force)
+        #         # Set friction to zero for the player while moving
+        #         self.physics_engine.set_friction(self.player, 0.0)
 
         # jump up
         if self.up_pressed:
@@ -457,9 +482,30 @@ class GameView(ar.View):
                     impulse = (0, PLAYER_JUMP_IMPULSE)
                     self.physics_engine.apply_impulse(self.player, impulse)
                     self.player.jumping = True
-                # if self.physics_engine.can_jump():
-                #     self.player.change_y = JUMP_SPEED
-                #     self.player.jumping = True
+
+        is_on_ground = self.physics_engine.is_on_ground(self.player)
+        # Update player forces based on keys pressed
+        if self.left_pressed and not self.right_pressed:
+            # Create a force to the left. Apply it.
+            if is_on_ground:
+                force = (-PLAYER_MOVE_FORCE_ON_GROUND, 0)
+            else:
+                force = (-PLAYER_MOVE_FORCE_IN_AIR, 0)
+            self.physics_engine.apply_force(self.player, force)
+            # Set friction to zero for the player while moving
+            self.physics_engine.set_friction(self.player, 0)
+        elif self.right_pressed and not self.left_pressed:
+            # Create a force to the right. Apply it.
+            if is_on_ground:
+                force = (PLAYER_MOVE_FORCE_ON_GROUND, 0)
+            else:
+                force = (PLAYER_MOVE_FORCE_IN_AIR, 0)
+            self.physics_engine.apply_force(self.player, force)
+            # Set friction to zero for the player while moving
+            self.physics_engine.set_friction(self.player, 0)
+        else:
+            # Player's feet are not moving. Therefore up the friction so we stop.
+            self.physics_engine.set_friction(self.player, 1.0)
 
         self.physics_engine.step()
 
@@ -474,7 +520,7 @@ class GameView(ar.View):
             current_time = int(round(time.time() * 1000))
             if (current_time - self.player.time_last_hit) > DAMAGE_BUFFER_TIME:
                 self.player.took_damage = False
-                self.player.color = DEFAULT_COLOR
+                self.player.color = self.player.default_color
                 self.player.change_x = 0
                 self.player.change_y = 0
 
@@ -491,6 +537,8 @@ class GameView(ar.View):
 
             # if player dies (runs out of health), respawn at the beginning of the level
         if self.player.health <= 0:
+            self.screen_wipe_rect = Rectangle()
+            self.screen_wipe_rect.setup()
             self.player_teleported = True
             self.physics_engine.set_position(self.player, self.player.spawnpoint)
             self.player.health = 99
@@ -531,6 +579,12 @@ class GameView(ar.View):
 
         self.handle_key_press()
 
+        if self.screen_wipe_rect:
+            self.screen_wipe_rect.center_x += self.screen_wipe_rect.change_y
+            self.screen_wipe_rect.center_y = self.view_bottom + (SCREEN_HEIGHT/2)
+            if self.screen_wipe_rect.center_x > SCREEN_WIDTH * 2:
+                self.screen_wipe_rect = None
+
         # Update everything
         self.player_list.update()
         self.all_sprites.update()
@@ -540,17 +594,23 @@ class GameView(ar.View):
         self.track_moving_enemies(delta_time)
         if ar.check_for_collision_with_list(self.player, self.keys_list):
             self.load_layer("Hidden Platforms", LIGHT_BLUE_COLOR)
+            self.player.color = LIGHT_BLUE_COLOR
 
         # if player gets to the right edge of the level, go to next level
         if self.player.right >= self.end_of_map:
+            self.screen_wipe_rect = Rectangle()
+            self.screen_wipe_rect.setup()
             self.level += 1 # switch to next level
             self.player_teleported = True
             self.physics_engine.set_horizontal_velocity(self.player, 0)
             self.load_level(self.level)
             self.physics_engine.set_position(self.player, self.player.spawnpoint)
 
+
         # if the player hits the bottom of the level, player dies and respawns at the start of the level
         if self.player.bottom <= 0:
+            self.screen_wipe_rect = Rectangle()
+            self.screen_wipe_rect.setup()
             # self.level += 1 # switch to next level
             self.player_teleported = True
             self.physics_engine.set_horizontal_velocity(self.player, 0)
@@ -606,6 +666,11 @@ class GameView(ar.View):
         :return:
         """
         ar.start_render()
+
+        # draw the background texture
+        ar.draw_lrwh_rectangle_textured(0, 0,
+                                        self.end_of_map, self.top_of_map,
+                                        self.background)
         self.all_sprites.draw()
         self.player_list.draw()
         self.wall_list.draw()
@@ -615,6 +680,10 @@ class GameView(ar.View):
         if self.hidden_platform_list:
             self.hidden_platform_list.draw()
         # self.player.draw()
+
+        # if not self.screen_wipe_rect:
+        self.screen_wipe()
+
 
         # draw hitboxes for walls
         if self.l_pressed:
@@ -697,6 +766,14 @@ class GameView(ar.View):
                      start_y=self.view_bottom + (SCREEN_HEIGHT - 65),
                      font_size=18,
                      color=ar.color.WHITE)
+        if self.screen_wipe_rect:
+            msg9 = self.screen_wipe_rect.center_x
+            output9 = f"screen wipe x: {msg9:.2f}"
+            ar.draw_text(text=output9,
+                         start_x=self.view_left + 20,
+                         start_y=self.view_bottom + (SCREEN_HEIGHT - 180),
+                         font_size=18,
+                         color=ar.color.WHITE)
 
 
 def run_game():
