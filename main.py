@@ -76,6 +76,12 @@ class GameView(ar.View):
         self.l_pressed = False
         self.k_pressed = False
 
+        #sounds
+        self.jump_sound = None
+        self.bg_music = None
+        self.playing_music = False
+
+
     def setup(self):
         """
         Get the game ready to play
@@ -106,6 +112,22 @@ class GameView(ar.View):
         self.paused = False
         self.collided = False
         self.collision_timer = 0.0
+
+        # sounds
+        self.jump_sound = ar.load_sound("sounds/jump1.wav")
+        self.bg_music = ar.Sound("music/gamesong1.wav")
+
+
+    def play_music(self):
+        """
+        play the background music, loop on end.
+        :return:
+        """
+        if self.bg_music and not self.playing_music:
+            self.bg_music.play(volume=BG_MUSIC_VOLUME)
+            self.playing_music = True
+        elif self.bg_music.is_complete():
+            self.bg_music.play(volume=BG_MUSIC_VOLUME)
 
 
     def load_level(self, level):
@@ -324,6 +346,7 @@ class GameView(ar.View):
                     if self.physics_engine.is_on_ground(self.player):
                         impulse = (0, PLAYER_JUMP_IMPULSE)
                         self.physics_engine.apply_impulse(self.player, impulse)
+                        ar.play_sound(self.jump_sound, volume=0.2)
 
 
             is_on_ground = self.physics_engine.is_on_ground(self.player)
@@ -421,6 +444,8 @@ class GameView(ar.View):
             self.physics_engine.step()
 
         self.handle_key_press()
+
+        self.play_music()
 
         if self.screen_wipe_rect:
             self.screen_wipe_rect.center_x += self.screen_wipe_rect.change_x

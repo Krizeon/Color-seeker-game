@@ -53,6 +53,10 @@ class PlayerCharacter(ar.Sprite):
         self.texture = self.idle_texture_pair[0]
         self.set_hit_box(self.texture.hit_box_points)
 
+        # load sounds
+        self.footstep_sound = ar.load_sound("sounds/footstep.wav")
+        self.jump_sound = ar.load_sound("sounds/jump1.wav")
+
     def pymunk_moved(self, physics_engine, dx, dy, d_angle):
         """
         handle animation when pymunk detects the player is moving
@@ -69,7 +73,7 @@ class PlayerCharacter(ar.Sprite):
             self.character_face_direction = RIGHT_FACING
 
         # Are we on the ground?
-        # is_on_ground = physics_engine.is_on_ground(self)
+        is_on_ground = physics_engine.is_on_ground(self)
 
         # Add to the odometer how far we've moved
         self.x_odometer += dx
@@ -123,6 +127,8 @@ class PlayerCharacter(ar.Sprite):
             self.cur_texture += 13
             if self.cur_texture > 13 * UPDATES_PER_FRAME:
                 self.cur_texture = 0
+            if self.cur_texture // UPDATES_PER_FRAME == 5 and is_on_ground:
+                ar.play_sound(self.footstep_sound, volume=0.4)
             self.texture = self.walking_textures[self.cur_texture // UPDATES_PER_FRAME][self.character_face_direction]
 
         # if player isn't crouching, set physics shape back to default size
