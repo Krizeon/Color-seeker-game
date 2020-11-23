@@ -8,7 +8,7 @@ SCREEN_WIDTH = 1280
 # screen window title (working title is used
 SCREEN_TITLE = "Color seeker!"
 
-SCALING = 1 # might be useful to remove this
+SCALING = 1  # might be useful to remove this
 
 # scaling of sprites (mostly the player)
 SPRITE_SCALING = 0.6
@@ -16,31 +16,32 @@ SPRITE_SCALING = 0.6
 # scaling of tiles from .tmx files
 TILE_SCALING = 0.6
 
-#size of the files of sprites
+# size of the files of sprites
 SPRITE_PIXEL_SIZE = 128
 
 # size of the grid in pixels, based on the current tile scaling
 GRID_PIXEL_SIZE = (SPRITE_PIXEL_SIZE * TILE_SCALING)
 
-#RGBA color constants
-DEFAULT_COLOR = [255,255,255,255] # white
-RED_COLOR = [255,0,0,255]
-BLUE_COLOR = [0,0,255,255]
-LIGHT_BLUE_COLOR = [102,153,255,255]
+# RGBA color constants
+DEFAULT_COLOR = [255, 255, 255, 255]  # white
+RED_COLOR = [255, 0, 0, 255]
+BLUE_COLOR = [0, 0, 255, 255]
+LIGHT_BLUE_COLOR = [102, 153, 255, 255]
 
+# music constants
+BG_MUSIC_VOLUME = 0.3
 
 # time in milliseconds until player may take damage again
 DAMAGE_BUFFER_TIME = 1000
 
-
 WINDOW_TITLE = "Cool Game!"
-PLAYER_SPRITE="sprites/greenguy_walking"
+PLAYER_SPRITE = "sprites/greenguy_walking"
 
 # direction that the sprite is facing (right = 0, left=1)
 LEFT_FACING = 1
 RIGHT_FACING = 0
 
-UPDATES_PER_FRAME = 10 #may not be necessary anymore?
+UPDATES_PER_FRAME = 10  # may not be necessary anymore?
 
 # physics related constants below
 # gravity affects objects in the world. higher values, faster falling speeds
