@@ -14,6 +14,16 @@ All assets in the screenshot above have been drawn by me in Adobe Photoshop. The
 
 If you are interested in which other features and enhancements are being planned, check out the Issues tab!
 
+#### How to run:
+Currently, this project is not a standalone app, so you must run main.py after installing the required packages. Luckily, you can do this easily with the included requirements.txt file! Just follow these steps:
+
+1) Clone this repo to a folder of your choice
+2) Create your own Virtual Environment (venv)
+3) Run pip install -r requirements.txt in a terminal/cmd in the project folder
+4) Done!
+
+After that, just run main.py to see Color Seeker in action. Enjoy!
+
 
  
  
