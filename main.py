@@ -115,7 +115,7 @@ class GameView(ar.View):
 
         # sounds
         self.jump_sound = ar.load_sound("sounds/jump1.wav")
-        self.bg_music = ar.Sound("music/gamesong1.wav")
+        self.bg_music = ar.Sound("music/calmsong.ogg")
 
 
     def play_music(self):
