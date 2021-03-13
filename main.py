@@ -456,13 +456,13 @@ class GameView(ar.View):
 
         self.play_music()
 
-        if self.screen_wipe_rect:
+        if self.screen_wipe_rect:  # when the game is transitioning to a new level/restarting a level
             self.screen_wipe_rect.center_x += self.screen_wipe_rect.change_x
             self.screen_wipe_rect.center_y = self.view_bottom + (SCREEN_HEIGHT/2)
             # handle loading level here, after screen is covered in blue wipe
             if (self.screen_wipe_rect.center_x > SCREEN_WIDTH) and (self.update_level):
                 self.load_level(self.level)
-                self.update_level = False
+                self.update_level = False  # lower flag when level begins to load
             if self.screen_wipe_rect.center_x > SCREEN_WIDTH * 2:
                 self.screen_wipe_rect = None
 
