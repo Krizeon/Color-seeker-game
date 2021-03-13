@@ -55,6 +55,7 @@ class GameView(ar.View):
         self.hidden_platform_list = None
         self.background = None
         self.screen_wipe_rect = None
+        self.update_level = False # flag raised when the blue screen wipe is occuring to load new level
 
         self.score = 0 # the player score
         self.player = None # the player object
@@ -137,6 +138,7 @@ class GameView(ar.View):
         :param level: the level number as a string
         :return: n/a
         """
+        self.player.color = DEFAULT_COLOR
         damping = DEFAULT_DAMPING
         gravity = (0, -GRAVITY)
         self.physics_engine = ar.PymunkPhysicsEngine(damping=damping,
@@ -245,19 +247,24 @@ class GameView(ar.View):
         :param modifiers: n/a
         :return: n/a
         """
+        # move left
         if key == ar.key.LEFT or key == ar.key.A:
             self.left_pressed = False
 
+        # move right
         elif key == ar.key.RIGHT or key == ar.key.D:
             self.right_pressed = False
 
+        # crouch down
         elif key == ar.key.DOWN or key == ar.key.S:
             self.down_pressed = False
             self.player.crouching = False
 
+        # jump up
         elif key == ar.key.UP or key == ar.key.W:
             self.up_pressed = False
 
+        # pause the game
         elif key == ar.key.P:
             self.p_pressed = False
 
@@ -402,11 +409,13 @@ class GameView(ar.View):
 
         # if player dies (runs out of health), respawn at the beginning of the level
         if self.player.health <= 0:
+            self.update_level = True  # raise this flag to properly restart level
             self.screen_wipe_rect = Rectangle()
             self.screen_wipe_rect.setup()
             self.player_teleported = True
             self.physics_engine.set_position(self.player, self.player.spawnpoint)
             self.player.health = 99
+
 
 
     def track_moving_enemies(self, delta_time):
@@ -450,6 +459,10 @@ class GameView(ar.View):
         if self.screen_wipe_rect:
             self.screen_wipe_rect.center_x += self.screen_wipe_rect.change_x
             self.screen_wipe_rect.center_y = self.view_bottom + (SCREEN_HEIGHT/2)
+            # handle loading level here, after screen is covered in blue wipe
+            if (self.screen_wipe_rect.center_x > SCREEN_WIDTH) and (self.update_level):
+                self.load_level(self.level)
+                self.update_level = False
             if self.screen_wipe_rect.center_x > SCREEN_WIDTH * 2:
                 self.screen_wipe_rect = None
 
@@ -460,29 +473,31 @@ class GameView(ar.View):
 
         self.process_damage()
         self.track_moving_enemies(delta_time)
-        if ar.check_for_collision_with_list(self.player, self.keys_list):
+        if ar.check_for_collision_with_list(self.player, self.keys_list) and not self.update_level:
             self.load_layer("Hidden Platforms", LIGHT_BLUE_COLOR)
             self.player.color = LIGHT_BLUE_COLOR
 
         # if player gets to the right edge of the level, go to next level
         if self.player.right >= self.end_of_map:
+            self.update_level = True  # raise this flag to properly restart level
+            self.level += 1  # switch to next level
             self.screen_wipe_rect = Rectangle()
             self.screen_wipe_rect.setup()
-            self.level += 1 # switch to next level
             self.player_teleported = True
             self.physics_engine.set_horizontal_velocity(self.player, 0)
-            self.load_level(self.level)
+            # self.load_level(self.level)
             self.physics_engine.set_position(self.player, self.player.spawnpoint)
 
 
         # if the player hits the bottom of the level, player dies and respawns at the start of the level
         if self.player.bottom <= 0:
+            self.update_level = True  # raise this flag to properly restart level
             self.screen_wipe_rect = Rectangle()
             self.screen_wipe_rect.setup()
             # self.level += 1 # switch to next level
             self.player_teleported = True
             self.physics_engine.set_horizontal_velocity(self.player, 0)
-            self.load_level(self.level)
+            # self.load_level(self.level)
             self.physics_engine.set_position(self.player, self.player.spawnpoint)
 
         if self.physics_engine.is_on_ground(self.player) and self.player.jumping:
@@ -536,9 +551,9 @@ class GameView(ar.View):
         ar.start_render()
 
         # draw the background texture
-        ar.draw_lrwh_rectangle_textured(0, 0,
-                                        self.end_of_map, self.top_of_map,
-                                        self.background)
+        # ar.draw_lrwh_rectangle_textured(0, 0,
+        #                                 self.end_of_map, self.top_of_map,
+        #                                 self.background)
         self.all_sprites.draw()
         self.player_list.draw()
         self.wall_list.draw()
