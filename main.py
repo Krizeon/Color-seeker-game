@@ -1,7 +1,3 @@
-import arcade as ar
-import pymunk as pm
-import math
-from typing import Optional
 import time
 
 # all classes and constants from views.py and constants.py are
@@ -138,6 +134,15 @@ class GameView(ar.View):
         :param level: the level number as a string
         :return: n/a
         """
+        # reinitialize all elements of a level
+        self.wall_list = None
+        self.enemies_list = None
+        self.scenery_list = None
+        self.keys_list = None
+        if self.hidden_platform_list:
+            self.hidden_platform_list = None
+
+
         self.player.color = DEFAULT_COLOR
         damping = DEFAULT_DAMPING
         gravity = (0, -GRAVITY)
@@ -199,10 +204,10 @@ class GameView(ar.View):
                                             body_type=ar.PymunkPhysicsEngine.KINEMATIC,
                                             collision_type="enemy")
 
-        self.physics_engine.add_sprite_list(self.keys_list,
-                                            mass=1,
-                                            body_type=ar.PymunkPhysicsEngine.KINEMATIC,
-                                            collision_type="wall")
+        # self.physics_engine.add_sprite_list(self.keys_list,
+        #                                     mass=1,
+        #                                     body_type=ar.PymunkPhysicsEngine.KINEMATIC,
+        #                                     collision_type="wall")
 
 
         self.view_left = 0
@@ -481,23 +486,25 @@ class GameView(ar.View):
         if self.player.right >= self.end_of_map:
             self.update_level = True  # raise this flag to properly restart level
             self.level += 1  # switch to next level
+
             self.screen_wipe_rect = Rectangle()
             self.screen_wipe_rect.setup()
             self.player_teleported = True
+
             self.physics_engine.set_horizontal_velocity(self.player, 0)
-            # self.load_level(self.level)
             self.physics_engine.set_position(self.player, self.player.spawnpoint)
 
 
         # if the player hits the bottom of the level, player dies and respawns at the start of the level
         if self.player.bottom <= 0:
             self.update_level = True  # raise this flag to properly restart level
+
             self.screen_wipe_rect = Rectangle()
             self.screen_wipe_rect.setup()
-            # self.level += 1 # switch to next level
+
             self.player_teleported = True
+
             self.physics_engine.set_horizontal_velocity(self.player, 0)
-            # self.load_level(self.level)
             self.physics_engine.set_position(self.player, self.player.spawnpoint)
 
         if self.physics_engine.is_on_ground(self.player) and self.player.jumping:
@@ -560,6 +567,7 @@ class GameView(ar.View):
         self.enemies_list.draw()
         self.scenery_list.draw()
         self.keys_list.draw()
+
         if self.hidden_platform_list:
             self.hidden_platform_list.draw()
         # self.player.draw()
