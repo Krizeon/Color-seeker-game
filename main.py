@@ -41,6 +41,8 @@ class GameView(ar.View):
         """
         super().__init__()
 
+        self.set_update_rate = None
+
         # Set up the empty sprite lists
         self.player_list = None
         self.enemies_list = None
@@ -83,6 +85,8 @@ class GameView(ar.View):
         """
         Get the game ready to play
         """
+        self.set_update_rate = 1/60
+
         # Set the background color
         ar.set_background_color(ar.color.BLACK)
 
@@ -200,7 +204,7 @@ class GameView(ar.View):
                                             body_type=ar.PymunkPhysicsEngine.STATIC)
 
         self.physics_engine.add_sprite_list(self.enemies_list,
-                                            mass=3,
+                                            mass=ENEMY_MASS,
                                             body_type=ar.PymunkPhysicsEngine.KINEMATIC,
                                             collision_type="enemy")
 
@@ -598,6 +602,7 @@ class GameView(ar.View):
             msg6 = self.player.jumping
             msg7 = self.player.center_x
             msg8 = is_on_ground
+            # msg10 = ar.Window.set_update_rate()
 
             output = f"Map width: {msg:.2f}"
             output2 = f"Is crouching: {msg2}"
@@ -607,6 +612,7 @@ class GameView(ar.View):
             output6 = f"Player Jumping?: {msg6}"
             output7 = f"Player X pos?: {msg7:.1f}"
             output8 = f"Player on ground?: {msg8}"
+            # output10 = f"framerate: {msg10}"
 
             ar.draw_text(text=output,
                          start_x=self.view_left + 20,
@@ -648,6 +654,11 @@ class GameView(ar.View):
                          start_y=self.view_bottom + (SCREEN_HEIGHT - 165),
                          font_size=18,
                          color=ar.color.WHITE)
+            # ar.draw_text(text=output10,
+            #              start_x=self.view_left + 20,
+            #              start_y=self.view_bottom + (SCREEN_HEIGHT - 185),
+            #              font_size=18,
+            #              color=ar.color.WHITE)
 
         msg3 = self.player.health
         output3 = f"HP: {msg3:.2f}"
@@ -667,7 +678,7 @@ class GameView(ar.View):
 
 
 def run_game():
-    window = ar.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+    window = ar.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, update_rate=FRAME_RATE)
     start_view = views.MenuView()
     window.show_view(start_view)
     ar.run()
