@@ -5,6 +5,7 @@ import time
 import views
 from constants import *
 from player import *
+from finite_state_machine import StateMachine, transition
 
 class Rectangle:
     """
@@ -54,6 +55,7 @@ class GameView(ar.View):
         self.background = None
         self.screen_wipe_rect = None
         self.update_level = False # flag raised when the blue screen wipe is occuring to load new level
+        self.key_colors = {}
 
         self.score = 0 # the player score
         self.player = None # the player object
@@ -95,7 +97,7 @@ class GameView(ar.View):
         # self.screen_wipe_rect.setup()
 
         self.player_list = ar.SpriteList()
-        self.level = 5
+        self.level = 6
         self.player = PlayerCharacter()
 
         # Set up the player
@@ -131,6 +133,34 @@ class GameView(ar.View):
             self.bg_music.play(volume=BG_MUSIC_VOLUME)
 
 
+    def convert_hex_to_color(self, hex):
+        """
+        convert a RGBA hex to int list
+        the format in Tiled's map files uses ARGB for some reason, so this function converts
+        the last 3 hex values and appends the first Alpha value at the end
+        :param hex: 4 hex-long string (ex: "#ab112244")
+        :return: color list (ex: [255,255,255,255])
+        """
+        hexes = hex[3:] #ignore the # and the first hex value (ex: "#ff"
+        nums = [hexes[i:i + 2] for i in range(0, len(hexes), 2)] # split every two elements
+        for i in range(len(nums)):
+            nums[i] = int(nums[i], 16)
+        nums.append(int(hex[1:3], 16))
+        return nums
+
+
+    def add_to_keys_dict(self, key, color):
+        """
+        adds key color to self.key_colors for future reference
+        :param key: current key
+        :return: none
+        """
+        # color_name = key.properties["color"]
+        # color_rgba = color
+        self.key_colors[key] = color
+        print(self.key_colors)
+
+
     def load_level(self, level):
         """
         load a .tmx map into the game world as well as setting the appropriate physics
@@ -145,7 +175,7 @@ class GameView(ar.View):
         self.keys_list = None
         if self.hidden_platform_list:
             self.hidden_platform_list = None
-
+        self.key_colors = {}
 
         self.player.color = DEFAULT_COLOR
         damping = DEFAULT_DAMPING
@@ -163,6 +193,14 @@ class GameView(ar.View):
                                                      layer_name='Color Orbs',
                                                      scaling=SPRITE_SCALING,
                                                      use_spatial_hash=True)
+
+
+        # change the color of hidden platforms as specified in the map properties
+        for key in self.keys_list:
+            key_color = self.convert_hex_to_color(key.properties["key_color"])
+            print(key_color)
+            key.color = key_color
+            self.add_to_keys_dict(key, key_color)
 
         # find the player spawnpoint in the .tmx map
         player_location = ar.tilemap.process_layer(self.current_map,
@@ -239,6 +277,8 @@ class GameView(ar.View):
                                                   layer_name=layer_name,
                                                   scaling=TILE_SCALING,
                                                   use_spatial_hash=True)
+
+        # change the color of hidden platforms as specified in the map properties
         for platform in self.hidden_platform_list:
             platform.color = color
 
@@ -483,8 +523,9 @@ class GameView(ar.View):
         self.process_damage()
         self.track_moving_enemies(delta_time)
         if ar.check_for_collision_with_list(self.player, self.keys_list) and not self.update_level:
-            self.load_layer("Hidden Platforms", LIGHT_BLUE_COLOR)
-            self.player.color = LIGHT_BLUE_COLOR
+            current_key = ar.check_for_collision_with_list(self.player, self.keys_list)[0]
+            self.load_layer("Hidden Platforms", self.key_colors[current_key])
+            self.player.color = self.key_colors[current_key]
 
         # if player gets to the right edge of the level, go to next level
         if self.player.right >= self.end_of_map:
