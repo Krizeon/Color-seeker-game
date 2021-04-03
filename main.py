@@ -97,7 +97,7 @@ class GameView(ar.View):
         # self.screen_wipe_rect.setup()
 
         self.player_list = ar.SpriteList()
-        self.level = 6
+        self.level = 4
         self.player = PlayerCharacter()
 
         # Set up the player
@@ -500,6 +500,9 @@ class GameView(ar.View):
 
         if not self.game_over or not self.paused:
             self.physics_engine.step()
+
+        if self.player.crouching:
+            self.physics_engine.resync_sprites()
 
         self.handle_key_press()
 

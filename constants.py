@@ -42,11 +42,11 @@ PLAYER_SPRITE = "sprites/greenguy_walking"
 LEFT_FACING = 1
 RIGHT_FACING = 0
 
-UPDATES_PER_FRAME = 10  # may not be necessary anymore?
+UPDATES_PER_FRAME = 8  # may not be necessary anymore?
 
 # physics related constants below
 # gravity affects objects in the world. higher values, faster falling speeds
-GRAVITY = 2000
+GRAVITY = 3000
 
 # damping is the percentage of velocity lost per second
 DEFAULT_DAMPING = 1.0
@@ -81,7 +81,7 @@ DISTANCE_TO_CHANGE_TEXTURE = 15
 PLAYER_MOVE_FORCE_IN_AIR = 2000
 
 # strength of a jump
-PLAYER_JUMP_IMPULSE = 1800
+PLAYER_JUMP_IMPULSE = 2000
 
 # boundaries of the viewport box, relative to the screen window's resolution
 VIEWPORT_MARGIN_TOP = 200

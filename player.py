@@ -11,7 +11,7 @@ class PlayerCharacter(ar.Sprite):
         # set up parent class
         super().__init__()
 
-        self._hit_box_algorithm = "None"
+        self._hit_box_algorithm = "Detailed"
         self.character_face_direction = RIGHT_FACING
         self.cur_texture = 0
         self.spawnpoint = [0, 0]
@@ -23,6 +23,9 @@ class PlayerCharacter(ar.Sprite):
         self.crouching = False  # is the player crouching?
         self.default_points = [[-40, -60], [40, -60], [40, 50], [-40, 50]]
         self.adjusted_hitbox = False  # this is a "latch", used for handling crouching.
+
+        self.collision_radius = 0
+        self.angle = 0
 
         self.jumping = False  # is the player jumping?
         self.scale = SPRITE_SCALING
@@ -39,7 +42,7 @@ class PlayerCharacter(ar.Sprite):
         self.idle_texture_pair = ar.load_texture_pair(f"{main_path}_idle.png")
 
         # add crouching texture
-        self.crouching_texture_pair = ar.load_texture_pair(f"{main_path}_squished.png", hit_box_algorithm="None")
+        self.crouching_texture_pair = ar.load_texture_pair(f"{main_path}_ball.png")
 
         # add jumping texture
         self.jumping_texture_pair = ar.load_texture_pair(f"{main_path}_jumping.png")
@@ -81,8 +84,10 @@ class PlayerCharacter(ar.Sprite):
 
         # change to crouching sprite if holding DOWN or S
         if self.crouching:
+            self.angle = 0
             self.texture = self.crouching_texture_pair[self.character_face_direction]
-            self.set_hit_box(self.texture.hit_box_points)
+            self.set_hit_box(None)
+            self.collision_radius = 16
 
             # in order to make the player smaller when crouching for the physics engine,
             # remove the player from the physics engine and add it back right away.
@@ -92,18 +97,21 @@ class PlayerCharacter(ar.Sprite):
                 physics_engine.add_sprite(self,
                                           friction=0.2,
                                           mass=PLAYER_MASS,
-                                          moment=ar.PymunkPhysicsEngine.MOMENT_INF,
+                                          moment=None,
                                           collision_type="player",
                                           max_horizontal_velocity=PLAYER_MAX_HORIZONTAL_SPEED,
                                           max_vertical_velocity=PLAYER_MAX_VERTICAL_SPEED)
+                self.texture = self.crouching_texture_pair[self.character_face_direction]
             self.adjusted_hitbox = True
             return
 
         # idle texture
         if abs(dx) <= DEAD_ZONE and not self.jumping:
+            self.angle = 0
             self.texture = self.idle_texture_pair[self.character_face_direction]
             self.set_hit_box(self.texture.hit_box_points)
             if self.adjusted_hitbox:
+                self.center_y += 16
                 physics_engine.remove_sprite(sprite=self)
                 physics_engine.add_sprite(self,
                                           friction=PLAYER_FRICTION,
@@ -113,30 +121,36 @@ class PlayerCharacter(ar.Sprite):
                                           max_horizontal_velocity=PLAYER_MAX_HORIZONTAL_SPEED,
                                           max_vertical_velocity=PLAYER_MAX_VERTICAL_SPEED)
                 self.adjusted_hitbox = False
+            return
 
         # jumping texture
         if self.jumping:
+            self.angle = 0
             self.texture = self.jumping_texture_pair[self.character_face_direction]
             self.set_hit_box(self.texture.hit_box_points)
             return
 
         # walking animation
         if abs(self.x_odometer) > DISTANCE_TO_CHANGE_TEXTURE:
+            self.angle = 0
             self.x_odometer = 0
             # do the walking animation
             self.cur_texture += 13
             if self.cur_texture > 13 * UPDATES_PER_FRAME:
                 self.cur_texture = 0
             if self.cur_texture // UPDATES_PER_FRAME == 5 and is_on_ground:
-                ar.play_sound(self.footstep_sound, volume=0.4)
+                ar.play_sound(self.footstep_sound, volume=0.6)
             self.texture = self.walking_textures[self.cur_texture // UPDATES_PER_FRAME][self.character_face_direction]
+            return
 
         # if player isn't crouching, set physics shape back to default size
         if self.adjusted_hitbox:
+            self.angle = 0
+            self.texture = self.idle_texture_pair[self.character_face_direction]
             physics_engine.remove_sprite(sprite=self)
             physics_engine.add_sprite(self,
                                       friction=PLAYER_FRICTION,
-                                      mass=PLAYER_MASS,
+                                      mass=100,
                                       moment=ar.PymunkPhysicsEngine.MOMENT_INF,
                                       collision_type="player",
                                       max_horizontal_velocity=PLAYER_MAX_HORIZONTAL_SPEED,
