@@ -5,16 +5,17 @@ list of all constants used across all game python scripts
 SCREEN_HEIGHT = 720
 SCREEN_WIDTH = 1280
 
+# frame rate of game (60)
+FRAME_RATE = 1/60
+
 # screen window title (working title is used
 SCREEN_TITLE = "Color seeker!"
 
-SCALING = 1  # might be useful to remove this
-
 # scaling of sprites (mostly the player)
-SPRITE_SCALING = 0.6
+SPRITE_SCALING = 0.5
 
 # scaling of tiles from .tmx files
-TILE_SCALING = 0.6
+TILE_SCALING = 0.5
 
 # size of the files of sprites
 SPRITE_PIXEL_SIZE = 128
@@ -41,11 +42,11 @@ PLAYER_SPRITE = "sprites/greenguy_walking"
 LEFT_FACING = 1
 RIGHT_FACING = 0
 
-UPDATES_PER_FRAME = 10  # may not be necessary anymore?
+UPDATES_PER_FRAME = 8  # may not be necessary anymore?
 
 # physics related constants below
 # gravity affects objects in the world. higher values, faster falling speeds
-GRAVITY = 2400
+GRAVITY = 3000
 
 # damping is the percentage of velocity lost per second
 DEFAULT_DAMPING = 1.0
@@ -67,8 +68,8 @@ PLAYER_MOVE_FORCE_ON_GROUND = 8000
 ENEMY_MOVE_FORCE_ON_GROUND = 8000
 
 # max x/y speeds
-PLAYER_MAX_HORIZONTAL_SPEED = 600
-PLAYER_MAX_VERTICAL_SPEED = 1300
+PLAYER_MAX_HORIZONTAL_SPEED = 500
+PLAYER_MAX_VERTICAL_SPEED = 1200
 
 # close enough to not-moving to have the animation go to idle.
 DEAD_ZONE = 0.1
@@ -77,7 +78,7 @@ DEAD_ZONE = 0.1
 DISTANCE_TO_CHANGE_TEXTURE = 15
 
 # force applied when moving left/right in the air
-PLAYER_MOVE_FORCE_IN_AIR = 3000
+PLAYER_MOVE_FORCE_IN_AIR = 2000
 
 # strength of a jump
 PLAYER_JUMP_IMPULSE = 2000

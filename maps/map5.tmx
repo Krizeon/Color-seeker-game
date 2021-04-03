@@ -1,11 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.4" tiledversion="1.4.2" orientation="orthogonal" renderorder="right-down" width="35" height="15" tilewidth="128" tileheight="128" infinite="0" nextlayerid="5" nextobjectid="10">
+<map version="1.5" tiledversion="1.5.0" orientation="orthogonal" renderorder="right-down" width="35" height="15" tilewidth="128" tileheight="128" infinite="0" nextlayerid="5" nextobjectid="14">
  <tileset firstgid="1" source="map_tileset.tsx"/>
  <tileset firstgid="257" source="enemy1.tsx"/>
  <tileset firstgid="258" source="colorful_spritesheet.tsx"/>
  <objectgroup id="2" name="Enemies">
-  <object id="1" gid="49" x="1884.48" y="1367.03" width="128" height="128"/>
-  <object id="2" gid="49" x="3060.24" y="1382.18" width="128" height="128"/>
+  <properties>
+   <property name="boundary_left" type="int" value="0"/>
+   <property name="boundary_right" type="int" value="0"/>
+  </properties>
+  <object id="12" gid="49" x="1905.33" y="1390.67" width="128" height="128">
+   <properties>
+    <property name="boundary_left" type="int" value="1200"/>
+    <property name="boundary_right" type="int" value="1600"/>
+    <property name="change_x" type="int" value="-4"/>
+   </properties>
+  </object>
+  <object id="13" gid="49" x="2676" y="1389.33" width="128" height="128">
+   <properties>
+    <property name="boundary_left" type="int" value="1500"/>
+    <property name="boundary_right" type="int" value="1900"/>
+    <property name="change_x" type="int" value="-4"/>
+   </properties>
+  </object>
  </objectgroup>
  <layer id="1" name="Foreground" width="35" height="15">
   <data encoding="csv">
@@ -41,7 +57,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,36,36,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,36,35,34,33,0,38,38,38,38,38,38,38,0,33,36,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,36,35,0,33,0,38,38,38,38,38,38,38,0,33,36,0,0,0,0,0,0,0,
 0,0,0,0,1,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,35,36,0,34,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,36,33,34,36,35,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
