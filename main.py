@@ -129,8 +129,10 @@ class GameView(ar.View):
         if self.bg_music and not self.playing_music:
             self.bg_music.play(volume=BG_MUSIC_VOLUME)
             self.playing_music = True
-        elif self.bg_music.is_complete():
-            self.bg_music.play(volume=BG_MUSIC_VOLUME)
+
+        # fix music loop functionality
+        # elif self.bg_music.is_complete():
+        #     self.bg_music.play(volume=BG_MUSIC_VOLUME)
 
 
     def convert_hex_to_color(self, hex):
