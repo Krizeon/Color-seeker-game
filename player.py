@@ -1,6 +1,19 @@
 import arcade as ar
 from constants import *
+import pymunk
 
+# coordinates to make a circular hitbox for when player is "crouching"
+CIRCLE = [(-30,0), (-28,10),(-20,22),(-10,28),
+          (0,30),(10,28),(20,22),(28,10),
+          (30,0),(28,-10),(20,-22),(10,-28),
+          (0,-30),(-10,-28),(-20,-22),(-28,-10)]
+
+class CircleSprite(ar.Sprite):
+    def __init__(self, filename, pymunk_shape):
+        super().__init__(filename, center_x=pymunk_shape.body.position.x, center_y=pymunk_shape.body.position.y)
+        self.width = pymunk_shape.radius * 2
+        self.height = pymunk_shape.radius * 2
+        self.pymunk_shape = pymunk_shape
 
 class PlayerCharacter(ar.Sprite):
     """
@@ -39,10 +52,10 @@ class PlayerCharacter(ar.Sprite):
         main_path = "sprites/player_sprites/player"
 
         # add idle texture
-        self.idle_texture_pair = ar.load_texture_pair(f"{main_path}_idle.png")
+        self.idle_texture_pair = ar.load_texture_pair(f"{main_path}_idle.png", hit_box_algorithm="Simple")
 
         # add crouching texture
-        self.crouching_texture_pair = ar.load_texture_pair(f"{main_path}_ball.png")
+        self.crouching_texture_pair = ar.load_texture_pair(f"{main_path}_ball.png", hit_box_algorithm="Detailed")
 
         # add jumping texture
         self.jumping_texture_pair = ar.load_texture_pair(f"{main_path}_jumping.png")
@@ -84,24 +97,30 @@ class PlayerCharacter(ar.Sprite):
 
         # change to crouching sprite if holding DOWN or S
         if self.crouching:
-            self.angle = 0
+            self._hit_box_detail = .2
+            # self.angle = 0
             self.texture = self.crouching_texture_pair[self.character_face_direction]
-            self.set_hit_box(None)
-            self.collision_radius = 16
+            self.hit_box = CIRCLE
+
+            # mass = 1
+            # radius = 8
+            # inertia = pymunk.moment_for_circle(mass, 0, radius, (0,0))
+            # body = pymunk.Body(mass, inertia)
+            # shape = pymunk.Circle(body, radius, pymunk.Vec2d(0,0))
+            # shape.friction = 0.2
 
             # in order to make the player smaller when crouching for the physics engine,
             # remove the player from the physics engine and add it back right away.
             # this makes the process of recreating the physics body and shape automatic.
             if not self.adjusted_hitbox:
                 physics_engine.remove_sprite(sprite=self)
-                physics_engine.add_sprite(self,
-                                          friction=0.2,
-                                          mass=PLAYER_MASS,
-                                          moment=None,
-                                          collision_type="player",
-                                          max_horizontal_velocity=PLAYER_MAX_HORIZONTAL_SPEED,
-                                          max_vertical_velocity=PLAYER_MAX_VERTICAL_SPEED)
+                physics_engine.add_sprite(self)
                 self.texture = self.crouching_texture_pair[self.character_face_direction]
+                print(physics_engine.get_physics_object(self))
+                # self.shape = shape
+                # self.body = body
+                self.hit_box = CIRCLE
+                print(self.hit_box)
             self.adjusted_hitbox = True
             return
 
@@ -121,6 +140,7 @@ class PlayerCharacter(ar.Sprite):
                                           max_horizontal_velocity=PLAYER_MAX_HORIZONTAL_SPEED,
                                           max_vertical_velocity=PLAYER_MAX_VERTICAL_SPEED)
                 self.adjusted_hitbox = False
+
             return
 
         # jumping texture
