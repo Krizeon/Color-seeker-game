@@ -12,6 +12,7 @@ class Rectangle:
     """
     Class to keep track of a ball's location and vector.
     """
+
     def __init__(self):
         self.center_x = 0
         self.center_y = 0
@@ -29,6 +30,22 @@ class Rectangle:
         self.change_x = SCREEN_WIDTH / 20
         self.change_y = SCREEN_WIDTH / 30
         self.color = ar.color.AZURE
+
+
+def convert_hex_to_color(hex_string):
+    """
+    convert a RGBA hex to int list
+    the format in Tiled's map files uses ARGB for some reason, so this function converts
+    the last 3 hex values and appends the first Alpha value at the end
+    :param hex_string: 4 hex-long string (ex: "#ab112244")
+    :return: color list (ex: [255,255,255,255])
+    """
+    hexes = hex_string[3:]  # ignore the # and the first hex value (ex: "#ff"
+    nums = [hexes[i:i + 2] for i in range(0, len(hexes), 2)]  # split every two elements
+    for i in range(len(nums)):
+        nums[i] = int(nums[i], 16)
+    nums.append(int(hex_string[1:3], 16))
+    return nums
 
 
 class GameView(ar.View):
@@ -57,13 +74,13 @@ class GameView(ar.View):
         self.hidden_platform_list = None
         self.background = None
         self.screen_wipe_rect = None
-        self.update_level = False  # flag raised when the blue screen wipe is occuring to load new level
+        self.update_level = False  # flag raised when the blue screen wipe is occurring to load new level
         self.key_colors = {}
 
         self.score = 0  # the player score
         self.player = None  # the player object
         self.physics_engine = None  # the physics engine object
-        self.level = STARTING_LEVEL  # the name of the level (.tmx)
+        self.level = None  # the name of the level (.tmx)
         self.message = None  # message for debug purposes
         self.end_of_map = 0
         self.top_of_map = 0
@@ -80,17 +97,28 @@ class GameView(ar.View):
         self.l_pressed = False
         self.k_pressed = False
 
+        # viewport window handling
+        self.view_left = 0
+        self.view_bottom = 0
+        self.height = 0
+        self.width = 0
+
         # sounds
         self.jump_sound = None
         self.bg_music = None
         self.playing_music = False
 
+        # conditions
+        self.game_over = False
+        self.paused = False
+        self.collided = False
+        self.collision_timer = 0
 
     def setup(self):
         """
         Get the game ready to play
         """
-        self.set_update_rate = 1/60
+        self.set_update_rate = 1 / 60
 
         # Set the background color
         ar.set_background_color(ar.color.BLACK)
@@ -100,7 +128,7 @@ class GameView(ar.View):
         # self.screen_wipe_rect.setup()
 
         self.player_list = ar.SpriteList()
-        self.level = 4
+        self.level = STARTING_LEVEL
         self.player = PlayerCharacter()
 
         # Set up the player
@@ -123,7 +151,6 @@ class GameView(ar.View):
         self.jump_sound = ar.load_sound("sounds/jump1.wav")
         self.bg_music = ar.Sound("music/calmsong.ogg")
 
-
     def play_music(self):
         """
         play the background music, loop on end.
@@ -137,34 +164,16 @@ class GameView(ar.View):
         # elif self.bg_music.is_complete():
         #     self.bg_music.play(volume=BG_MUSIC_VOLUME)
 
-
-    def convert_hex_to_color(self, hex):
-        """
-        convert a RGBA hex to int list
-        the format in Tiled's map files uses ARGB for some reason, so this function converts
-        the last 3 hex values and appends the first Alpha value at the end
-        :param hex: 4 hex-long string (ex: "#ab112244")
-        :return: color list (ex: [255,255,255,255])
-        """
-        hexes = hex[3:] #ignore the # and the first hex value (ex: "#ff"
-        nums = [hexes[i:i + 2] for i in range(0, len(hexes), 2)] # split every two elements
-        for i in range(len(nums)):
-            nums[i] = int(nums[i], 16)
-        nums.append(int(hex[1:3], 16))
-        return nums
-
-
     def add_to_keys_dict(self, key, color):
         """
         adds key color to self.key_colors for future reference
         :param key: current key
+        :param color: list of colors in RGBA format (255,255,255,255)
         :return: none
         """
         # color_name = key.properties["color"]
         # color_rgba = color
         self.key_colors[key] = color
-        print(self.key_colors)
-
 
     def load_level(self, level):
         """
@@ -198,23 +207,22 @@ class GameView(ar.View):
         self.top_of_map = self.current_map.map_size.height * GRID_PIXEL_SIZE
 
         self.keys_list = ar.tilemap.process_layer(self.current_map,
-                                                     layer_name='Color Orbs',
-                                                     scaling=SPRITE_SCALING,
-                                                     use_spatial_hash=True)
-
+                                                  layer_name='Color Orbs',
+                                                  scaling=SPRITE_SCALING,
+                                                  use_spatial_hash=True)
 
         # change the color of hidden platforms as specified in the map properties
         for key in self.keys_list:
-            key_color = self.convert_hex_to_color(key.properties["key_color"])
+            key_color = convert_hex_to_color(key.properties["key_color"])
             print(key_color)
             key.color = key_color
             self.add_to_keys_dict(key, key_color)
 
         # find the player spawnpoint in the .tmx map
         player_location = ar.tilemap.process_layer(self.current_map,
-                                                     layer_name='Player Spawn',
-                                                     scaling=SPRITE_SCALING,
-                                                     use_spatial_hash=True)
+                                                   layer_name='Player Spawn',
+                                                   scaling=SPRITE_SCALING,
+                                                   use_spatial_hash=True)
 
         # handle setting the player spawnpoint
         self.player.spawnpoint = int(player_location[0].center_x), int(player_location[0].center_y)
@@ -245,9 +253,9 @@ class GameView(ar.View):
                                                      use_spatial_hash=True)
 
         self.moving_platforms_list = ar.tilemap.process_layer(self.current_map,
-                                                     layer_name='Moving Platforms',
-                                                     scaling=TILE_SCALING,
-                                                     use_spatial_hash=True)
+                                                              layer_name='Moving Platforms',
+                                                              scaling=TILE_SCALING,
+                                                              use_spatial_hash=True)
 
         self.physics_engine.add_sprite_list(self.wall_list,
                                             friction=WALL_FRICTION,
@@ -280,9 +288,9 @@ class GameView(ar.View):
         :return: n/a
         """
         self.hidden_platform_list = ar.tilemap.process_layer(self.current_map,
-                                                  layer_name=layer_name,
-                                                  scaling=TILE_SCALING,
-                                                  use_spatial_hash=True)
+                                                             layer_name=layer_name,
+                                                             scaling=TILE_SCALING,
+                                                             use_spatial_hash=True)
 
         # change the color of hidden platforms as specified in the map properties
         for platform in self.hidden_platform_list:
@@ -292,7 +300,6 @@ class GameView(ar.View):
                                             friction=WALL_FRICTION,
                                             collision_type="wall",
                                             body_type=ar.PymunkPhysicsEngine.STATIC)
-
 
     def on_key_release(self, key: int, modifiers: int):
         """
@@ -322,7 +329,6 @@ class GameView(ar.View):
         # pause the game
         elif key == ar.key.P:
             self.p_pressed = False
-
 
     def on_key_press(self, key: int, modifiers: int):
         """
@@ -364,7 +370,6 @@ class GameView(ar.View):
         elif key == ar.key.K and self.k_pressed:
             self.k_pressed = False
 
-
     def handle_key_press(self):
         """
         after the pressing of keys has been abstracted away
@@ -376,7 +381,7 @@ class GameView(ar.View):
         """
         if not self.screen_wipe_rect:
             # sliding and moving at the same time!
-            if self.down_pressed: #(self.down_pressed and self.right_pressed) or (self.down_pressed and self.left_pressed):
+            if self.down_pressed:  # (self.down_pressed and self.right_pressed) or (self.down_pressed and self.left_pressed):
                 if self.physics_engine.is_on_ground(self.player) and not self.player.jumping:
                     self.player.crouching = True
                     # smoothly slide down a hill
@@ -410,7 +415,6 @@ class GameView(ar.View):
                         self.physics_engine.apply_impulse(self.player, impulse)
                         ar.play_sound(self.jump_sound, volume=0.2)
 
-
             is_on_ground = self.physics_engine.is_on_ground(self.player)
             # Update player forces based on keys pressed
             if self.left_pressed and not (self.right_pressed or self.down_pressed):
@@ -436,14 +440,13 @@ class GameView(ar.View):
                 # Player's feet are not moving. Therefore up the friction so we stop.
                 self.physics_engine.set_friction(self.player, 1.0)
 
-
     def process_damage(self):
         """
         handle the math behind damage dealt to the player, as well as
         handle what happens when the player's health reaches 0.
         :return: n/a
         """
-        if self.player.took_damage == True:
+        if self.player.took_damage:
             # start cooldown until player can take damage again
             current_time = int(round(time.time() * 1000))
             if (current_time - self.player.time_last_hit) > DAMAGE_BUFFER_TIME:
@@ -472,21 +475,23 @@ class GameView(ar.View):
             self.physics_engine.set_position(self.player, self.player.spawnpoint)
             self.player.health = 99
 
-
-
     def track_moving_sprites(self, delta_time):
         # For each moving sprite, see if we've reached a boundary and need to
         # reverse course.
         count = 0
         for enemy_sprite in self.enemies_list:
             count += 1
-            if enemy_sprite.boundary_right and enemy_sprite.change_x > 0 and enemy_sprite.right > (enemy_sprite.boundary_right * SPRITE_SCALING):
+            if enemy_sprite.boundary_right and enemy_sprite.change_x > 0 and enemy_sprite.right > (
+                    enemy_sprite.boundary_right * SPRITE_SCALING):
                 enemy_sprite.change_x *= -1
-            elif enemy_sprite.boundary_left and enemy_sprite.change_x < 0 and enemy_sprite.left < (enemy_sprite.boundary_left * SPRITE_SCALING):
+            elif enemy_sprite.boundary_left and enemy_sprite.change_x < 0 and enemy_sprite.left < (
+                    enemy_sprite.boundary_left * SPRITE_SCALING):
                 enemy_sprite.change_x *= -1
-            if enemy_sprite.boundary_top and enemy_sprite.change_y > 0 and enemy_sprite.top > (enemy_sprite.boundary_top * SPRITE_SCALING):
+            if enemy_sprite.boundary_top and enemy_sprite.change_y > 0 and enemy_sprite.top > (
+                    enemy_sprite.boundary_top * SPRITE_SCALING):
                 enemy_sprite.change_y *= -1
-            elif enemy_sprite.boundary_bottom and enemy_sprite.change_y < 0 and enemy_sprite.bottom < (enemy_sprite.boundary_bottom * SPRITE_SCALING):
+            elif enemy_sprite.boundary_bottom and enemy_sprite.change_y < 0 and enemy_sprite.bottom < (
+                    enemy_sprite.boundary_bottom * SPRITE_SCALING):
                 enemy_sprite.change_y *= -1
 
             velocity = (enemy_sprite.change_x * 1 / delta_time, enemy_sprite.change_y * 1 / delta_time)
@@ -494,13 +499,17 @@ class GameView(ar.View):
 
         for moving_platform in self.moving_platforms_list:
             count += 1
-            if moving_platform.boundary_right and moving_platform.change_x > 0 and moving_platform.right > (moving_platform.boundary_right * SPRITE_SCALING):
+            if moving_platform.boundary_right and moving_platform.change_x > 0 and moving_platform.right > (
+                    moving_platform.boundary_right * SPRITE_SCALING):
                 moving_platform.change_x *= -1
-            elif moving_platform.boundary_left and moving_platform.change_x < 0 and moving_platform.left < (moving_platform.boundary_left * SPRITE_SCALING):
+            elif moving_platform.boundary_left and moving_platform.change_x < 0 and moving_platform.left < (
+                    moving_platform.boundary_left * SPRITE_SCALING):
                 moving_platform.change_x *= -1
-            if moving_platform.boundary_top and moving_platform.change_y > 0 and moving_platform.top > (moving_platform.boundary_top * SPRITE_SCALING):
+            if moving_platform.boundary_top and moving_platform.change_y > 0 and moving_platform.top > (
+                    moving_platform.boundary_top * SPRITE_SCALING):
                 moving_platform.change_y *= -1
-            elif moving_platform.boundary_bottom and moving_platform.change_y < 0 and moving_platform.bottom < (moving_platform.boundary_bottom * SPRITE_SCALING):
+            elif moving_platform.boundary_bottom and moving_platform.change_y < 0 and moving_platform.bottom < (
+                    moving_platform.boundary_bottom * SPRITE_SCALING):
                 moving_platform.change_y *= -1
 
             # Figure out and set our moving platform velocity.
@@ -511,7 +520,6 @@ class GameView(ar.View):
 
             velocity = (moving_platform.change_x * 1 / delta_time, moving_platform.change_y * 1 / delta_time)
             self.physics_engine.set_velocity(moving_platform, velocity)
-
 
     def on_update(self, delta_time: float):
         """
@@ -532,7 +540,7 @@ class GameView(ar.View):
 
         if self.screen_wipe_rect:  # when the game is transitioning to a new level/restarting a level
             self.screen_wipe_rect.center_x += self.screen_wipe_rect.change_x
-            self.screen_wipe_rect.center_y = self.view_bottom + (SCREEN_HEIGHT/2)
+            self.screen_wipe_rect.center_y = self.view_bottom + (SCREEN_HEIGHT / 2)
             # handle loading level here, after screen is covered in blue wipe
             if (self.screen_wipe_rect.center_x > SCREEN_WIDTH) and (self.update_level):
                 self.load_level(self.level)
@@ -564,7 +572,6 @@ class GameView(ar.View):
 
             self.physics_engine.set_horizontal_velocity(self.player, 0)
             self.physics_engine.set_position(self.player, self.player.spawnpoint)
-
 
         # if the player hits the bottom of the level, player dies and respawns at the start of the level
         if self.player.bottom <= 0:
@@ -614,9 +621,9 @@ class GameView(ar.View):
             self.view_left = int(self.view_left)
             self.view_bottom = int(self.view_bottom)
             ar.set_viewport(self.view_left,
-                                SCREEN_WIDTH + self.view_left,
-                                self.view_bottom,
-                                SCREEN_HEIGHT + self.view_bottom)
+                            SCREEN_WIDTH + self.view_left,
+                            self.view_bottom,
+                            SCREEN_HEIGHT + self.view_bottom)
 
         if self.player_teleported and self.screen_wipe_rect.center_x > SCREEN_WIDTH:
             self.view_left = 0
@@ -627,7 +634,6 @@ class GameView(ar.View):
                             SCREEN_HEIGHT + self.view_bottom)
 
             self.player_teleported = False
-
 
     def on_draw(self):
         """
@@ -693,7 +699,7 @@ class GameView(ar.View):
             ar.draw_text(text=output,
                          start_x=self.view_left + 20,
                          start_y=self.view_bottom + (SCREEN_HEIGHT - 25),
-                         font_size= 18,
+                         font_size=18,
                          color=ar.color.WHITE)
             ar.draw_text(text=output2,
                          start_x=self.view_left + 20,
@@ -759,6 +765,6 @@ def run_game():
     window.show_view(start_view)
     ar.run()
 
+
 if __name__ == '__main__':
     run_game()
-

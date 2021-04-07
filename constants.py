@@ -1,7 +1,7 @@
 """
 list of all constants used across all game python scripts
 """
-STARTING_LEVEL = 4
+STARTING_LEVEL = 6
 
 # screen size (currently 720p)
 SCREEN_HEIGHT = 720
@@ -44,11 +44,11 @@ PLAYER_SPRITE = "sprites/greenguy_walking"
 LEFT_FACING = 1
 RIGHT_FACING = 0
 
-UPDATES_PER_FRAME = 8  # may not be necessary anymore?
+UPDATES_PER_FRAME = 13  # speed of the player animation
 
 # physics related constants below
 # gravity affects objects in the world. higher values, faster falling speeds
-GRAVITY = 3000
+GRAVITY = 2800
 
 # damping is the percentage of velocity lost per second
 DEFAULT_DAMPING = 1.0
