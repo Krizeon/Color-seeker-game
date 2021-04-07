@@ -7,6 +7,7 @@ from constants import *
 from player import *
 from finite_state_machine import StateMachine, transition
 
+
 class Rectangle:
     """
     Class to keep track of a ball's location and vector.
@@ -47,21 +48,23 @@ class GameView(ar.View):
         # Set up the empty sprite lists
         self.player_list = None
         self.enemies_list = None
-        self.wall_list = None # list of walls that an object can collide with
+        self.wall_list = None  # list of walls that an object can collide with
         self.scenery_list = None
-        self.all_sprites = ar.SpriteList() # the list of sprites on the screen
+        self.moving_platforms_list = None
+
+        self.all_sprites = ar.SpriteList()  # the list of sprites on the screen
         self.keys_list = None
         self.hidden_platform_list = None
         self.background = None
         self.screen_wipe_rect = None
-        self.update_level = False # flag raised when the blue screen wipe is occuring to load new level
+        self.update_level = False  # flag raised when the blue screen wipe is occuring to load new level
         self.key_colors = {}
 
-        self.score = 0 # the player score
-        self.player = None # the player object
-        self.physics_engine = None # the physics engine object
-        self.level = 1 # the name of the level (.tmx)
-        self.message = None # message for debug purposes
+        self.score = 0  # the player score
+        self.player = None  # the player object
+        self.physics_engine = None  # the physics engine object
+        self.level = STARTING_LEVEL  # the name of the level (.tmx)
+        self.message = None  # message for debug purposes
         self.end_of_map = 0
         self.top_of_map = 0
         self.player_teleported = False
@@ -77,7 +80,7 @@ class GameView(ar.View):
         self.l_pressed = False
         self.k_pressed = False
 
-        #sounds
+        # sounds
         self.jump_sound = None
         self.bg_music = None
         self.playing_music = False
@@ -171,10 +174,13 @@ class GameView(ar.View):
         :return: n/a
         """
         # reinitialize all elements of a level
+        self.view_left = 0
+        self.view_bottom = 0
         self.wall_list = None
         self.enemies_list = None
         self.scenery_list = None
         self.keys_list = None
+        self.moving_platforms_list = None
         if self.hidden_platform_list:
             self.hidden_platform_list = None
         self.key_colors = {}
@@ -238,6 +244,11 @@ class GameView(ar.View):
                                                      scaling=TILE_SCALING,
                                                      use_spatial_hash=True)
 
+        self.moving_platforms_list = ar.tilemap.process_layer(self.current_map,
+                                                     layer_name='Moving Platforms',
+                                                     scaling=TILE_SCALING,
+                                                     use_spatial_hash=True)
+
         self.physics_engine.add_sprite_list(self.wall_list,
                                             friction=WALL_FRICTION,
                                             collision_type="wall",
@@ -248,15 +259,9 @@ class GameView(ar.View):
                                             body_type=ar.PymunkPhysicsEngine.KINEMATIC,
                                             collision_type="enemy")
 
-        # self.physics_engine.add_sprite_list(self.keys_list,
-        #                                     mass=1,
-        #                                     body_type=ar.PymunkPhysicsEngine.KINEMATIC,
-        #                                     collision_type="wall")
-
-
-        self.view_left = 0
-        self.view_bottom = 0
-
+        self.physics_engine.add_sprite_list(self.moving_platforms_list,
+                                            body_type=ar.PymunkPhysicsEngine.KINEMATIC,
+                                            collision_type="moving")
 
     def screen_wipe(self):
         if self.screen_wipe_rect:
@@ -266,7 +271,6 @@ class GameView(ar.View):
                                      height=self.screen_wipe_rect.height,
                                      color=self.screen_wipe_rect.color
                                      )
-
 
     def load_layer(self, layer_name, color):
         """
@@ -346,7 +350,7 @@ class GameView(ar.View):
         if key == ar.key.A or key == ar.key.LEFT:
             self.left_pressed = True
 
-        if (key == ar.key.D or key == ar.key.RIGHT):
+        if key == ar.key.D or key == ar.key.RIGHT:
             self.right_pressed = True
 
         # keys below are toggles for debugging purposes (drawing hitboxes, etc)
@@ -409,7 +413,7 @@ class GameView(ar.View):
 
             is_on_ground = self.physics_engine.is_on_ground(self.player)
             # Update player forces based on keys pressed
-            if self.left_pressed and not self.right_pressed:
+            if self.left_pressed and not (self.right_pressed or self.down_pressed):
                 # Create a force to the left. Apply it.
                 if is_on_ground:
                     force = (-PLAYER_MOVE_FORCE_ON_GROUND, 0)
@@ -418,7 +422,8 @@ class GameView(ar.View):
                 self.physics_engine.apply_force(self.player, force)
                 # Set friction to zero for the player while moving
                 self.physics_engine.set_friction(self.player, 0)
-            elif self.right_pressed and not self.left_pressed:
+
+            elif self.right_pressed and not (self.left_pressed or self.down_pressed):
                 # Create a force to the right. Apply it.
                 if is_on_ground:
                     force = (PLAYER_MOVE_FORCE_ON_GROUND, 0)
@@ -469,28 +474,43 @@ class GameView(ar.View):
 
 
 
-    def track_moving_enemies(self, delta_time):
+    def track_moving_sprites(self, delta_time):
         # For each moving sprite, see if we've reached a boundary and need to
         # reverse course.
         count = 0
         for enemy_sprite in self.enemies_list:
             count += 1
-            if enemy_sprite.boundary_right and enemy_sprite.change_x > 0 and enemy_sprite.right > enemy_sprite.boundary_right:
+            if enemy_sprite.boundary_right and enemy_sprite.change_x > 0 and enemy_sprite.right > (enemy_sprite.boundary_right * SPRITE_SCALING):
                 enemy_sprite.change_x *= -1
-            elif enemy_sprite.boundary_left and enemy_sprite.change_x < 0 and enemy_sprite.left < enemy_sprite.boundary_left:
+            elif enemy_sprite.boundary_left and enemy_sprite.change_x < 0 and enemy_sprite.left < (enemy_sprite.boundary_left * SPRITE_SCALING):
                 enemy_sprite.change_x *= -1
-            if enemy_sprite.boundary_top and enemy_sprite.change_y > 0 and enemy_sprite.top > enemy_sprite.boundary_top:
+            if enemy_sprite.boundary_top and enemy_sprite.change_y > 0 and enemy_sprite.top > (enemy_sprite.boundary_top * SPRITE_SCALING):
                 enemy_sprite.change_y *= -1
-            elif enemy_sprite.boundary_bottom and enemy_sprite.change_y < 0 and enemy_sprite.bottom < enemy_sprite.boundary_bottom:
+            elif enemy_sprite.boundary_bottom and enemy_sprite.change_y < 0 and enemy_sprite.bottom < (enemy_sprite.boundary_bottom * SPRITE_SCALING):
                 enemy_sprite.change_y *= -1
+
+            velocity = (enemy_sprite.change_x * 1 / delta_time, enemy_sprite.change_y * 1 / delta_time)
+            self.physics_engine.set_velocity(enemy_sprite, velocity)
+
+        for moving_platform in self.moving_platforms_list:
+            count += 1
+            if moving_platform.boundary_right and moving_platform.change_x > 0 and moving_platform.right > (moving_platform.boundary_right * SPRITE_SCALING):
+                moving_platform.change_x *= -1
+            elif moving_platform.boundary_left and moving_platform.change_x < 0 and moving_platform.left < (moving_platform.boundary_left * SPRITE_SCALING):
+                moving_platform.change_x *= -1
+            if moving_platform.boundary_top and moving_platform.change_y > 0 and moving_platform.top > (moving_platform.boundary_top * SPRITE_SCALING):
+                moving_platform.change_y *= -1
+            elif moving_platform.boundary_bottom and moving_platform.change_y < 0 and moving_platform.bottom < (moving_platform.boundary_bottom * SPRITE_SCALING):
+                moving_platform.change_y *= -1
 
             # Figure out and set our moving platform velocity.
             # Pymunk uses velocity is in pixels per second. If we instead have
             # pixels per frame, we need to convert.
             # force = (-PLAYER_MOVE_FORCE_ON_GROUND, 0)
             # self.physics_engine.apply_force(enemy_sprite, force)
-            velocity = (enemy_sprite.change_x * 1 / delta_time, enemy_sprite.change_y * 1 / delta_time)
-            self.physics_engine.set_velocity(enemy_sprite, velocity)
+
+            velocity = (moving_platform.change_x * 1 / delta_time, moving_platform.change_y * 1 / delta_time)
+            self.physics_engine.set_velocity(moving_platform, velocity)
 
 
     def on_update(self, delta_time: float):
@@ -524,9 +544,10 @@ class GameView(ar.View):
         self.player_list.update()
         self.all_sprites.update()
         self.enemies_list.update()
+        self.moving_platforms_list.update()
 
         self.process_damage()
-        self.track_moving_enemies(delta_time)
+        self.track_moving_sprites(delta_time)
         if ar.check_for_collision_with_list(self.player, self.keys_list) and not self.update_level:
             current_key = ar.check_for_collision_with_list(self.player, self.keys_list)[0]
             self.load_layer("Hidden Platforms", self.key_colors[current_key])
@@ -589,7 +610,7 @@ class GameView(ar.View):
 
         # If we need to scroll, go ahead and do it.
         # also change viewport when player has teleported (when switching levels, respawning, etc)
-        if changed or self.player_teleported:
+        if changed:
             self.view_left = int(self.view_left)
             self.view_bottom = int(self.view_bottom)
             ar.set_viewport(self.view_left,
@@ -597,7 +618,15 @@ class GameView(ar.View):
                                 self.view_bottom,
                                 SCREEN_HEIGHT + self.view_bottom)
 
-        self.player_teleported = False
+        if self.player_teleported and self.screen_wipe_rect.center_x > SCREEN_WIDTH:
+            self.view_left = 0
+            self.view_bottom = 0
+            ar.set_viewport(self.view_left,
+                            SCREEN_WIDTH + self.view_left,
+                            self.view_bottom,
+                            SCREEN_HEIGHT + self.view_bottom)
+
+            self.player_teleported = False
 
 
     def on_draw(self):
@@ -617,6 +646,7 @@ class GameView(ar.View):
         self.enemies_list.draw()
         self.scenery_list.draw()
         self.keys_list.draw()
+        self.moving_platforms_list.draw()
 
         if self.hidden_platform_list:
             self.hidden_platform_list.draw()

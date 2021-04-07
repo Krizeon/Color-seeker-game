@@ -1,42 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.4" tiledversion="1.4.3" orientation="orthogonal" renderorder="right-down" width="25" height="10" tilewidth="128" tileheight="128" infinite="0" nextlayerid="6" nextobjectid="4">
+<map version="1.5" tiledversion="1.5.0" orientation="orthogonal" renderorder="right-down" width="25" height="10" tilewidth="128" tileheight="128" infinite="0" nextlayerid="6" nextobjectid="4">
  <tileset firstgid="1" source="colorful_spritesheet.tsx"/>
  <tileset firstgid="17" source="enemy1.tsx"/>
- <layer id="1" name="Foreground" width="25" height="10">
-  <data encoding="csv">
-4,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,11,6,6,6,6,6,6,6,6,
-4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,14,11,6,6,6,6,6,6,6,
-4,0,0,0,3,2,0,0,1,1,1,1,1,1,2,0,0,14,11,6,6,6,6,6,6,
-4,0,1,1,1,1,1,1,14,11,4,0,0,0,7,2,0,0,14,11,0,0,0,0,0,
-4,0,0,0,0,0,0,0,14,11,4,0,8,0,0,0,0,0,14,11,0,0,0,0,0,
-4,7,7,7,7,7,0,0,14,11,4,0,7,7,7,7,7,7,0,0,0,0,0,0,0,
-4,0,0,0,0,0,0,1,5,11,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-4,0,0,0,0,0,1,5,11,6,4,0,0,0,0,0,0,0,0,0,0,0,7,7,1,
-4,0,0,0,0,0,0,7,0,0,7,0,0,0,0,0,0,0,7,7,0,0,0,0,9,
-1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,1,1,0,0,0,0,0,0,0,0
-</data>
- </layer>
  <objectgroup id="5" name="Player Spawn">
-  <object id="3" gid="16" x="194.115" y="1150.12" width="128" height="128"/>
+  <object id="3" gid="16" x="151.691" y="1138" width="128" height="128"/>
  </objectgroup>
  <objectgroup id="4" name="Enemies">
-  <object id="1" name="Grunt" gid="17" x="559.346" y="635.446" width="85" height="116">
+  <object id="1" name="Grunt" gid="17" x="650.255" y="1147.57" width="85" height="116">
    <properties>
     <property name="boundary_bottom" type="int" value="0"/>
-    <property name="boundary_left" type="int" value="200"/>
-    <property name="boundary_right" type="int" value="400"/>
+    <property name="boundary_left" type="int" value="512"/>
+    <property name="boundary_right" type="int" value="761"/>
     <property name="boundary_top" type="int" value="0"/>
     <property name="change_x" type="int" value="-1"/>
    </properties>
   </object>
-  <object id="2" name="Grunt" gid="17" x="2070.83" y="1155.33" width="85" height="116">
+  <object id="2" name="Grunt" gid="17" x="1943.56" y="1146.24" width="85" height="116">
    <properties>
     <property name="boundary_bottom" type="int" value="0"/>
-    <property name="boundary_left" type="int" value="200"/>
-    <property name="boundary_right" type="int" value="400"/>
+    <property name="boundary_left" type="int" value="1536"/>
+    <property name="boundary_right" type="int" value="2176"/>
     <property name="boundary_top" type="int" value="0"/>
     <property name="change_x" type="int" value="0"/>
    </properties>
   </object>
  </objectgroup>
+ <layer id="1" name="Foreground" width="25" height="10">
+  <data encoding="csv">
+4,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,11,6,6,6,6,6,6,6,6,
+4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,14,11,6,6,6,6,6,6,6,
+4,0,0,0,0,0,0,3,1,1,1,1,1,1,2,0,0,14,11,6,6,6,6,6,6,
+4,0,0,1,1,1,1,1,14,11,4,0,0,0,7,2,0,0,14,11,0,0,0,0,0,
+4,0,0,0,0,0,0,0,14,11,4,0,0,0,0,0,0,0,14,11,0,0,0,0,0,
+4,7,7,7,7,7,0,0,14,11,4,0,7,7,7,7,7,7,0,0,0,0,0,0,0,
+4,0,0,0,0,0,0,1,5,11,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+4,0,0,0,0,0,1,5,11,6,4,0,0,0,0,0,0,0,0,0,0,0,7,7,1,
+4,0,0,0,0,0,0,7,0,0,7,0,0,0,0,0,0,0,7,7,7,0,0,0,9,
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0
+</data>
+ </layer>
 </map>

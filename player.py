@@ -114,13 +114,10 @@ class PlayerCharacter(ar.Sprite):
             # this makes the process of recreating the physics body and shape automatic.
             if not self.adjusted_hitbox:
                 physics_engine.remove_sprite(sprite=self)
-                physics_engine.add_sprite(self)
+                physics_engine.add_sprite(self,
+                                          friction=0.2)
                 self.texture = self.crouching_texture_pair[self.character_face_direction]
-                print(physics_engine.get_physics_object(self))
-                # self.shape = shape
-                # self.body = body
                 self.hit_box = CIRCLE
-                print(self.hit_box)
             self.adjusted_hitbox = True
             return
 

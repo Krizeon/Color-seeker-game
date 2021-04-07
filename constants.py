@@ -1,6 +1,8 @@
 """
 list of all constants used across all game python scripts
 """
+STARTING_LEVEL = 4
+
 # screen size (currently 720p)
 SCREEN_HEIGHT = 720
 SCREEN_WIDTH = 1280
