@@ -1,38 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.4" tiledversion="1.4.2" orientation="orthogonal" renderorder="right-down" width="30" height="15" tilewidth="128" tileheight="128" infinite="0" nextlayerid="6" nextobjectid="21">
+<map version="1.5" tiledversion="1.5.0" orientation="orthogonal" renderorder="right-down" width="30" height="15" tilewidth="128" tileheight="128" infinite="0" nextlayerid="6" nextobjectid="21">
  <tileset firstgid="1" source="colorful_spritesheet.tsx"/>
  <tileset firstgid="17" source="enemy1.tsx"/>
  <layer id="1" name="Foreground" width="30" height="15">
   <data encoding="csv">
 13,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,14,11,
 13,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,14,11,
-13,0,0,0,0,0,0,0,0,0,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,14,11,
+13,0,0,0,0,0,0,0,0,0,7,7,3221225480,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,14,11,
 13,0,0,0,0,0,7,7,0,0,0,0,0,0,0,1,1,1,1,0,0,1,1,1,0,0,0,0,14,11,
-13,0,0,7,0,0,0,0,0,0,0,0,0,0,0,14,13,0,0,0,0,0,0,0,0,0,0,3,5,11,
+13,0,3221225480,7,0,0,0,0,0,0,0,0,0,0,0,14,13,0,0,0,0,0,0,0,0,0,0,3,5,11,
 13,0,0,0,0,0,0,0,0,0,0,0,0,0,0,14,13,0,0,0,0,0,0,0,0,0,3,5,9,0,
 7,7,7,7,7,7,7,7,7,7,7,7,7,0,0,14,13,0,0,0,0,7,7,7,7,7,5,9,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,14,5,2,0,0,0,0,0,0,0,0,9,6,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,3,1,5,9,5,2,0,0,0,0,0,0,0,0,14,0,0,
 0,0,0,0,0,0,0,0,0,0,0,3,1,5,5,9,0,9,5,2,0,0,0,0,0,0,0,14,0,0,
 0,0,0,0,0,0,0,0,0,0,3,5,9,9,9,0,0,0,9,5,2,0,3,1,2,0,3,0,0,0,
-0,0,0,0,0,0,0,1,1,1,5,9,0,0,0,0,0,0,0,9,5,1,0,0,0,0,0,0,0,0,
-1,1,1,1,1,0,0,9,9,9,9,0,0,0,0,0,0,0,0,0,9,0,0,0,0,0,0,0,0,0,
-9,9,9,9,9,0,0,0,6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,6,0,0,0,0,6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,1
+0,0,0,0,0,0,0,1,1,1,5,9,0,0,0,0,0,0,0,9,5,1,0,0,2684354561,0,1610612737,0,0,0,
+1,1,1,1,1,0,0,9,9,9,9,0,0,0,0,0,0,0,0,0,9,0,0,0,2684354561,0,0,0,0,0,
+9,9,9,9,9,0,0,0,6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2684354561,1,1,0,0,0,
+0,0,0,6,0,0,0,0,6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2684354561,0,0,0,1,1
 </data>
  </layer>
  <objectgroup id="2" name="Player Spawn">
-  <object id="2" x="1539.54" y="2931.82">
-   <point/>
-  </object>
   <object id="20" gid="16" x="127" y="1530" width="128" height="128"/>
  </objectgroup>
  <objectgroup id="3" name="Enemies">
   <object id="18" name="Grunt" gid="17" x="3201.5" y="765" width="85" height="116">
    <properties>
     <property name="boundary_bottom" type="int" value="0"/>
-    <property name="boundary_left" type="int" value="2600"/>
-    <property name="boundary_right" type="int" value="3000"/>
+    <property name="boundary_left" type="int" value="2812"/>
+    <property name="boundary_right" type="int" value="3228"/>
     <property name="boundary_top" type="int" value="0"/>
     <property name="change_x" type="int" value="-1"/>
    </properties>
@@ -40,8 +37,8 @@
   <object id="19" name="Grunt" gid="17" x="1281.5" y="764" width="85" height="116">
    <properties>
     <property name="boundary_bottom" type="int" value="0"/>
-    <property name="boundary_left" type="int" value="500"/>
-    <property name="boundary_right" type="int" value="800"/>
+    <property name="boundary_left" type="int" value="628"/>
+    <property name="boundary_right" type="int" value="1408"/>
     <property name="boundary_top" type="int" value="0"/>
     <property name="change_x" type="int" value="-1"/>
    </properties>
