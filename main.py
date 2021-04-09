@@ -289,7 +289,7 @@ class GameView(ar.View):
                                             collision_type="wall")
 
         self.physics_engine.add_sprite_list(self.cannons_list,
-                                            friction=0,
+                                            friction=CANNON_FRICTION,
                                             mass=CANNON_MASS,
                                             body_type=ar.PymunkPhysicsEngine.DYNAMIC)
 
@@ -543,9 +543,15 @@ class GameView(ar.View):
             # force = (-PLAYER_MOVE_FORCE_ON_GROUND, 0)
             # self.physics_engine.apply_force(enemy_sprite, force)
 
-        if (ar.check_for_collision_with_list(self.player, self.cannons_list)):
+        # cannon launching handling
+        # only launch cannon if player is crouching
+        if (ar.check_for_collision_with_list(self.player, self.cannons_list)) and self.player.crouching:
             current_cannon = ar.check_for_collision_with_list(self.player, self.cannons_list)[0]
-            self.physics_engine.apply_impulse(current_cannon, (0, CANNON_IMPULSE))
+            current_cannon_velocities = self.physics_engine.get_physics_object(current_cannon).body.velocity
+            velocity_x = current_cannon_velocities[0]
+            velocity_y = current_cannon_velocities[1]
+            if velocity_x < CANNON_MAX_HORIZONTAL_SPEED:
+                self.physics_engine.apply_impulse(current_cannon, (0, CANNON_IMPULSE))
 
     def on_update(self, delta_time: float):
         """

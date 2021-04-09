@@ -66,6 +66,9 @@ ENEMY_FRICTION = 0.9
 # friction of tiles that are deemed to be walls
 WALL_FRICTION = 0.8
 
+# friction of cannon block
+CANNON_FRICTION = .8
+
 # mass of cannons
 CANNON_MASS = 10
 
@@ -83,13 +86,16 @@ DEAD_ZONE = 0.1
 DISTANCE_TO_CHANGE_TEXTURE = 15
 
 # force applied when moving left/right in the air
-PLAYER_MOVE_FORCE_IN_AIR = 8000
+PLAYER_MOVE_FORCE_IN_AIR = 4000
 
 # strength of a jump
 PLAYER_JUMP_IMPULSE = 2000
 
 # strength of a cannon
-CANNON_IMPULSE = 2000
+CANNON_IMPULSE = 1800
+
+# max cannon speed
+CANNON_MAX_HORIZONTAL_SPEED = 1800
 
 # boundaries of the viewport box, relative to the screen window's resolution
 VIEWPORT_MARGIN_TOP = 200
