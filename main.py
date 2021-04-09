@@ -68,6 +68,7 @@ class GameView(ar.View):
         self.wall_list = None  # list of walls that an object can collide with
         self.scenery_list = None
         self.moving_platforms_list = None
+        self.cannons_list = None
 
         self.all_sprites = ar.SpriteList()  # the list of sprites on the screen
         self.keys_list = None
@@ -96,6 +97,8 @@ class GameView(ar.View):
         self.p_pressed = False
         self.l_pressed = False
         self.k_pressed = False
+        self.m_pressed = False
+        self.r_pressed = False
 
         # viewport window handling
         self.view_left = 0
@@ -118,7 +121,6 @@ class GameView(ar.View):
         """
         Get the game ready to play
         """
-        self.set_update_rate = 1 / 60
 
         # Set the background color
         ar.set_background_color(ar.color.BLACK)
@@ -149,7 +151,7 @@ class GameView(ar.View):
 
         # sounds
         self.jump_sound = ar.load_sound("sounds/jump1.wav")
-        self.bg_music = ar.Sound("music/calmsong.ogg")
+        self.bg_music = ar.Sound("music/calmsong.ogg", streaming=True)
 
     def play_music(self):
         """
@@ -163,6 +165,15 @@ class GameView(ar.View):
         # fix music loop functionality
         # elif self.bg_music.is_complete():
         #     self.bg_music.play(volume=BG_MUSIC_VOLUME)
+
+    def mute_music(self):
+        """
+        pause the background music
+        :return:
+        """
+        if self.m_pressed:
+            self.bg_music.stop()
+            self.playing_music = False
 
     def add_to_keys_dict(self, key, color):
         """
@@ -214,7 +225,6 @@ class GameView(ar.View):
         # change the color of hidden platforms as specified in the map properties
         for key in self.keys_list:
             key_color = convert_hex_to_color(key.properties["key_color"])
-            print(key_color)
             key.color = key_color
             self.add_to_keys_dict(key, key_color)
 
@@ -257,6 +267,12 @@ class GameView(ar.View):
                                                               scaling=TILE_SCALING,
                                                               use_spatial_hash=True)
 
+        self.cannons_list = ar.tilemap.process_layer(self.current_map,
+                                                        layer_name='Cannons',
+                                                        scaling=TILE_SCALING,
+                                                        hit_box_algorithm="Detailed",
+                                                        use_spatial_hash=True)
+
         self.physics_engine.add_sprite_list(self.wall_list,
                                             friction=WALL_FRICTION,
                                             collision_type="wall",
@@ -268,8 +284,14 @@ class GameView(ar.View):
                                             collision_type="enemy")
 
         self.physics_engine.add_sprite_list(self.moving_platforms_list,
+                                            friction=WALL_FRICTION,
                                             body_type=ar.PymunkPhysicsEngine.KINEMATIC,
-                                            collision_type="moving")
+                                            collision_type="wall")
+
+        self.physics_engine.add_sprite_list(self.cannons_list,
+                                            friction=0,
+                                            mass=CANNON_MASS,
+                                            body_type=ar.PymunkPhysicsEngine.DYNAMIC)
 
     def screen_wipe(self):
         if self.screen_wipe_rect:
@@ -301,6 +323,7 @@ class GameView(ar.View):
                                             collision_type="wall",
                                             body_type=ar.PymunkPhysicsEngine.STATIC)
 
+
     def on_key_release(self, key: int, modifiers: int):
         """
         check for the last key to have been released, set the respective
@@ -325,6 +348,10 @@ class GameView(ar.View):
         # jump up
         elif key == ar.key.UP or key == ar.key.W:
             self.up_pressed = False
+
+        # restart the level
+        elif key == ar.key.R:
+            self.r_pressed = False
 
         # pause the game
         elif key == ar.key.P:
@@ -359,6 +386,14 @@ class GameView(ar.View):
         if key == ar.key.D or key == ar.key.RIGHT:
             self.right_pressed = True
 
+        if key == ar.key.R:
+            self.r_pressed = True
+
+        if key == ar.key.M:
+            self.m_pressed = True
+        elif key == ar.key.M and self.m_pressed:
+            self.l_pressed = False
+
         # keys below are toggles for debugging purposes (drawing hitboxes, etc)
         if key == ar.key.L and not self.l_pressed:
             self.l_pressed = True
@@ -385,26 +420,7 @@ class GameView(ar.View):
                 if self.physics_engine.is_on_ground(self.player) and not self.player.jumping:
                     self.player.crouching = True
                     # smoothly slide down a hill
-                    self.physics_engine.set_friction(self.player, 0.2)
-                    # slide using leftover momentum from running left or right
-
-            # # move left
-            # elif self.left_pressed:
-            #     if not self.player.crouching:
-            #         # Create a force to the left. Apply it.
-            #         force = (-PLAYER_MOVE_FORCE_ON_GROUND, 0)
-            #         self.physics_engine.apply_force(self.player, force)
-            #         # Set friction to zero for the player while moving
-            #         self.physics_engine.set_friction(self.player, 0.0)
-            #
-            # # move right
-            # elif self.right_pressed:
-            #     if not self.player.crouching:
-            #         # Create a force to the right. Apply it.
-            #         force = (PLAYER_MOVE_FORCE_ON_GROUND, 0)
-            #         self.physics_engine.apply_force(self.player, force)
-            #         # Set friction to zero for the player while moving
-            #         self.physics_engine.set_friction(self.player, 0.0)
+                    # self.physics_engine.set_friction(self.player, 0.2)
 
             # jump up
             if self.up_pressed:
@@ -413,7 +429,7 @@ class GameView(ar.View):
                     if self.physics_engine.is_on_ground(self.player):
                         impulse = (0, PLAYER_JUMP_IMPULSE)
                         self.physics_engine.apply_impulse(self.player, impulse)
-                        ar.play_sound(self.jump_sound, volume=0.2)
+                        ar.play_sound(self.jump_sound, volume=0.4)
 
             is_on_ground = self.physics_engine.is_on_ground(self.player)
             # Update player forces based on keys pressed
@@ -475,6 +491,11 @@ class GameView(ar.View):
             self.physics_engine.set_position(self.player, self.player.spawnpoint)
             self.player.health = 99
 
+    def restart_level(self):
+        if self.r_pressed:
+            # kill player, trigger level to restart
+            self.player.health = 0
+
     def track_moving_sprites(self, delta_time):
         # For each moving sprite, see if we've reached a boundary and need to
         # reverse course.
@@ -494,9 +515,13 @@ class GameView(ar.View):
                     enemy_sprite.boundary_bottom * SPRITE_SCALING):
                 enemy_sprite.change_y *= -1
 
+            # Figure out and set our moving platform velocity.
+            # Pymunk uses velocity is in pixels per second. If we instead have
+            # pixels per frame, we need to convert.
             velocity = (enemy_sprite.change_x * 1 / delta_time, enemy_sprite.change_y * 1 / delta_time)
             self.physics_engine.set_velocity(enemy_sprite, velocity)
 
+        count = 0
         for moving_platform in self.moving_platforms_list:
             count += 1
             if moving_platform.boundary_right and moving_platform.change_x > 0 and moving_platform.right > (
@@ -512,14 +537,15 @@ class GameView(ar.View):
                     moving_platform.boundary_bottom * SPRITE_SCALING):
                 moving_platform.change_y *= -1
 
-            # Figure out and set our moving platform velocity.
-            # Pymunk uses velocity is in pixels per second. If we instead have
-            # pixels per frame, we need to convert.
+            velocity = (moving_platform.change_x * 1 / delta_time, moving_platform.change_y * 1 / delta_time)
+            self.physics_engine.set_velocity(moving_platform, velocity)
+
             # force = (-PLAYER_MOVE_FORCE_ON_GROUND, 0)
             # self.physics_engine.apply_force(enemy_sprite, force)
 
-            velocity = (moving_platform.change_x * 1 / delta_time, moving_platform.change_y * 1 / delta_time)
-            self.physics_engine.set_velocity(moving_platform, velocity)
+        if (ar.check_for_collision_with_list(self.player, self.cannons_list)):
+            current_cannon = ar.check_for_collision_with_list(self.player, self.cannons_list)[0]
+            self.physics_engine.apply_impulse(current_cannon, (0, CANNON_IMPULSE))
 
     def on_update(self, delta_time: float):
         """
@@ -527,7 +553,6 @@ class GameView(ar.View):
         If paused, do nothing
         :param delta_time: Time since the last update
         """
-
         if not self.game_over or not self.paused:
             self.physics_engine.step()
 
@@ -536,7 +561,9 @@ class GameView(ar.View):
 
         self.handle_key_press()
 
-        self.play_music()
+        # handle background music
+        # self.play_music()
+        # self.mute_music()
 
         if self.screen_wipe_rect:  # when the game is transitioning to a new level/restarting a level
             self.screen_wipe_rect.center_x += self.screen_wipe_rect.change_x
@@ -553,9 +580,12 @@ class GameView(ar.View):
         self.all_sprites.update()
         self.enemies_list.update()
         self.moving_platforms_list.update()
+        self.cannons_list.update()
 
         self.process_damage()
+        self.restart_level() # check if R key is pressed, restart level if so
         self.track_moving_sprites(delta_time)
+
         if ar.check_for_collision_with_list(self.player, self.keys_list) and not self.update_level:
             current_key = ar.check_for_collision_with_list(self.player, self.keys_list)[0]
             self.load_layer("Hidden Platforms", self.key_colors[current_key])
@@ -653,6 +683,7 @@ class GameView(ar.View):
         self.scenery_list.draw()
         self.keys_list.draw()
         self.moving_platforms_list.draw()
+        self.cannons_list.draw()
 
         if self.hidden_platform_list:
             self.hidden_platform_list.draw()
@@ -665,6 +696,15 @@ class GameView(ar.View):
         if self.l_pressed:
             for wall in self.wall_list:
                 wall.draw_hit_box(RED_COLOR)
+            if self.hidden_platform_list:
+                for platform in self.hidden_platform_list:
+                    platform.draw_hitbox(RED_COLOR)
+            if self.keys_list:
+                for key in self.keys_list:
+                    key.draw_hit_box(RED_COLOR)
+            if self.cannons_list:
+                for cannon in self.cannons_list:
+                    cannon.draw_hit_box(RED_COLOR)
 
         # draw player hitboxes and debug info
         if self.k_pressed:
@@ -683,8 +723,8 @@ class GameView(ar.View):
             msg5 = velocity_y
             msg6 = self.player.jumping
             msg7 = self.player.center_x
-            msg8 = is_on_ground
-            # msg10 = ar.Window.set_update_rate()
+            msg8 = self.player.center_y
+            msg10 = is_on_ground
 
             output = f"Map width: {msg:.2f}"
             output2 = f"Is crouching: {msg2}"
@@ -693,8 +733,8 @@ class GameView(ar.View):
             output5 = f"Player Y vel: {msg5:.2f}"
             output6 = f"Player Jumping?: {msg6}"
             output7 = f"Player X pos?: {msg7:.1f}"
-            output8 = f"Player on ground?: {msg8}"
-            # output10 = f"framerate: {msg10}"
+            output8 = f"Player Y pos?: {msg8:.1f}"
+            output10 = f"Player on ground?: {msg10}"
 
             ar.draw_text(text=output,
                          start_x=self.view_left + 20,
@@ -736,11 +776,11 @@ class GameView(ar.View):
                          start_y=self.view_bottom + (SCREEN_HEIGHT - 165),
                          font_size=18,
                          color=ar.color.WHITE)
-            # ar.draw_text(text=output10,
-            #              start_x=self.view_left + 20,
-            #              start_y=self.view_bottom + (SCREEN_HEIGHT - 185),
-            #              font_size=18,
-            #              color=ar.color.WHITE)
+            ar.draw_text(text=output10,
+                         start_x=self.view_left + 20,
+                         start_y=self.view_bottom + (SCREEN_HEIGHT - 185),
+                         font_size=18,
+                         color=ar.color.WHITE)
 
         msg3 = self.player.health
         output3 = f"HP: {msg3:.2f}"

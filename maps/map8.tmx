@@ -1,39 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.5" tiledversion="1.5.0" orientation="orthogonal" renderorder="right-down" width="30" height="15" tilewidth="128" tileheight="128" infinite="0" nextlayerid="4" nextobjectid="3">
+<map version="1.5" tiledversion="1.5.0" orientation="orthogonal" renderorder="right-down" width="30" height="12" tilewidth="128" tileheight="128" infinite="0" nextlayerid="6" nextobjectid="10">
  <tileset firstgid="1" source="map_tileset.tsx"/>
  <tileset firstgid="257" source="colorful_spritesheet.tsx"/>
- <objectgroup id="2" name="Moving Platforms">
-  <object id="1" gid="17" x="648.121" y="1571.27" width="128" height="128" rotation="45">
+ <objectgroup id="4" name="Player Spawn">
+  <object id="1" gid="272" x="114.788" y="1400.36" width="128" height="128"/>
+ </objectgroup>
+ <objectgroup id="3" name="Moving Platforms" visible="0">
+  <object id="5" gid="51" x="587.515" y="1315.52" width="128" height="128"/>
+  <object id="8" gid="18" x="515.818" y="1332.85" width="128" height="128" rotation="60">
    <properties>
-    <property name="boundary_bottom" value="1412"/>
-    <property name="boundary_left" value="640"/>
-    <property name="boundary_right" value="891"/>
-    <property name="boundary_top" value="1663"/>
-    <property name="change_x" value="3"/>
-    <property name="change_y" value="-3"/>
+    <property name="boundary_bottom" value="100"/>
+    <property name="boundary_left" value="300"/>
+    <property name="boundary_right" value="428"/>
+    <property name="boundary_top" value="228"/>
+    <property name="change_x" value="10"/>
+    <property name="change_y" value="10"/>
    </properties>
   </object>
  </objectgroup>
- <objectgroup id="3" name="Player Spawn">
-  <object id="2" gid="272" x="129.939" y="1648.85" width="128" height="128"/>
+ <objectgroup id="5" name="Cannons">
+  <object id="9" gid="1" x="1356" y="1290.67" width="128" height="128" rotation="62"/>
  </objectgroup>
- <layer id="1" name="Foreground" width="30" height="15">
+ <layer id="1" name="Foreground" width="30" height="12">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,1,1,1,1,1,1,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2684354564,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1610612737,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1610612737,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,1,1,1,3221225491,3221225475,0,3,19,0,0,0,0,0,1610612737,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,3,19,4,1,1,2684354579,3,19,1,1,0,0,0,0,0,1610612737,0,0,0,0,0,0,0,0,0,
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 </data>
  </layer>
 </map>

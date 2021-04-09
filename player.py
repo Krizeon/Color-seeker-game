@@ -55,7 +55,7 @@ class PlayerCharacter(ar.Sprite):
         self.idle_texture_pair = ar.load_texture_pair(f"{main_path}_idle.png", hit_box_algorithm="Simple")
 
         # add crouching texture
-        self.crouching_texture_pair = ar.load_texture_pair(f"{main_path}_ball.png", hit_box_algorithm="Detailed")
+        self.crouching_texture_pair = ar.load_texture_pair(f"{main_path}_ball.png")
 
         # add jumping texture
         self.jumping_texture_pair = ar.load_texture_pair(f"{main_path}_jumping.png")
@@ -115,7 +115,7 @@ class PlayerCharacter(ar.Sprite):
             if not self.adjusted_hitbox:
                 physics_engine.remove_sprite(sprite=self)
                 physics_engine.add_sprite(self,
-                                          friction=0.2)
+                                          friction=0)
                 self.texture = self.crouching_texture_pair[self.character_face_direction]
                 self.hit_box = CIRCLE
             self.adjusted_hitbox = True
@@ -156,7 +156,7 @@ class PlayerCharacter(ar.Sprite):
             if self.cur_texture > 13 * UPDATES_PER_FRAME:
                 self.cur_texture = 0
             if self.cur_texture // UPDATES_PER_FRAME == 5 and is_on_ground:
-                ar.play_sound(self.footstep_sound, volume=0.6)
+                ar.play_sound(self.footstep_sound, volume=0.2)
             self.texture = self.walking_textures[self.cur_texture // UPDATES_PER_FRAME][self.character_face_direction]
             return
 
