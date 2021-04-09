@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.5" tiledversion="1.5.0" orientation="orthogonal" renderorder="right-down" width="30" height="12" tilewidth="128" tileheight="128" infinite="0" nextlayerid="9" nextobjectid="35">
+<map version="1.5" tiledversion="1.5.0" orientation="orthogonal" renderorder="right-down" width="30" height="12" tilewidth="128" tileheight="128" infinite="0" nextlayerid="11" nextobjectid="35">
  <tileset firstgid="1" source="map_tileset.tsx"/>
  <tileset firstgid="257" source="colorful_spritesheet.tsx"/>
+ <objectgroup id="10" name="Special Objects"/>
  <objectgroup id="4" name="Player Spawn">
   <object id="1" gid="272" x="114.788" y="1400.36" width="128" height="128"/>
  </objectgroup>

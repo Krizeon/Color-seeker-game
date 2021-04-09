@@ -6,31 +6,8 @@ import views
 from constants import *
 from player import *
 from finite_state_machine import StateMachine, transition
-
-
-class Rectangle:
-    """
-    Class to keep track of a ball's location and vector.
-    """
-
-    def __init__(self):
-        self.center_x = 0
-        self.center_y = 0
-        self.width = 0
-        self.height = 0
-        self.change_x = 0
-        self.change_y = 0
-        self.color = None
-
-    def setup(self):
-        self.center_x = -SCREEN_WIDTH
-        self.center_y = 0
-        self.width = SCREEN_WIDTH * 2
-        self.height = SCREEN_HEIGHT
-        self.change_x = SCREEN_WIDTH / 20
-        self.change_y = SCREEN_WIDTH / 30
-        self.color = ar.color.AZURE
-
+from transition import Transition
+from controls import Controls
 
 def convert_hex_to_color(hex_string):
     """
@@ -166,14 +143,6 @@ class GameView(ar.View):
         # elif self.bg_music.is_complete():
         #     self.bg_music.play(volume=BG_MUSIC_VOLUME)
 
-    def mute_music(self):
-        """
-        pause the background music
-        :return:
-        """
-        if self.m_pressed:
-            self.bg_music.stop()
-            self.playing_music = False
 
     def add_to_keys_dict(self, key, color):
         """
@@ -268,10 +237,10 @@ class GameView(ar.View):
                                                               use_spatial_hash=True)
 
         self.cannons_list = ar.tilemap.process_layer(self.current_map,
-                                                        layer_name='Cannons',
-                                                        scaling=TILE_SCALING,
-                                                        hit_box_algorithm="Detailed",
-                                                        use_spatial_hash=True)
+                                                     layer_name='Cannons',
+                                                     scaling=TILE_SCALING,
+                                                     hit_box_algorithm="Detailed",
+                                                     use_spatial_hash=True)
 
         self.physics_engine.add_sprite_list(self.wall_list,
                                             friction=WALL_FRICTION,
@@ -323,7 +292,6 @@ class GameView(ar.View):
                                             collision_type="wall",
                                             body_type=ar.PymunkPhysicsEngine.STATIC)
 
-
     def on_key_release(self, key: int, modifiers: int):
         """
         check for the last key to have been released, set the respective
@@ -332,30 +300,7 @@ class GameView(ar.View):
         :param modifiers: n/a
         :return: n/a
         """
-        # move left
-        if key == ar.key.LEFT or key == ar.key.A:
-            self.left_pressed = False
-
-        # move right
-        elif key == ar.key.RIGHT or key == ar.key.D:
-            self.right_pressed = False
-
-        # crouch down
-        elif key == ar.key.DOWN or key == ar.key.S:
-            self.down_pressed = False
-            self.player.crouching = False
-
-        # jump up
-        elif key == ar.key.UP or key == ar.key.W:
-            self.up_pressed = False
-
-        # restart the level
-        elif key == ar.key.R:
-            self.r_pressed = False
-
-        # pause the game
-        elif key == ar.key.P:
-            self.p_pressed = False
+        Controls.handle_key_release(self, key, modifiers)
 
     def on_key_press(self, key: int, modifiers: int):
         """
@@ -364,97 +309,9 @@ class GameView(ar.View):
         :param modifiers: n/a
         :return: n/a
         """
-        # quit immediately
-        if key == ar.key.ESCAPE:
-            self.escape_pressed = True
-            ar.close_window()
+        Controls.handle_key_presses(self, key, modifiers)
 
-        # pause game (do this here to immediately pause without interrupting game)
-        if key == ar.key.P:
-            pause_view = views.PauseView(game_view=self)
-            self.window.show_view(pause_view)
 
-        if key == ar.key.W or key == ar.key.UP:
-            self.up_pressed = True
-
-        if key == ar.key.S or key == ar.key.DOWN:
-            self.down_pressed = True
-
-        if key == ar.key.A or key == ar.key.LEFT:
-            self.left_pressed = True
-
-        if key == ar.key.D or key == ar.key.RIGHT:
-            self.right_pressed = True
-
-        if key == ar.key.R:
-            self.r_pressed = True
-
-        if key == ar.key.M:
-            self.m_pressed = True
-        elif key == ar.key.M and self.m_pressed:
-            self.l_pressed = False
-
-        # keys below are toggles for debugging purposes (drawing hitboxes, etc)
-        if key == ar.key.L and not self.l_pressed:
-            self.l_pressed = True
-        elif key == ar.key.L and self.l_pressed:
-            self.l_pressed = False
-
-        if key == ar.key.K and not self.k_pressed:
-            self.k_pressed = True
-        elif key == ar.key.K and self.k_pressed:
-            self.k_pressed = False
-
-    def handle_key_press(self):
-        """
-        after the pressing of keys has been abstracted away
-        into instance variables, handle the intended game
-        actions here. controls movement of player, as well
-        as other key inputs
-        :return: a game action for any given key press (player
-        movement, pause game, quit game, etc)
-        """
-        if not self.screen_wipe_rect:
-            # sliding and moving at the same time!
-            if self.down_pressed:  # (self.down_pressed and self.right_pressed) or (self.down_pressed and self.left_pressed):
-                if self.physics_engine.is_on_ground(self.player) and not self.player.jumping:
-                    self.player.crouching = True
-                    # smoothly slide down a hill
-                    # self.physics_engine.set_friction(self.player, 0.2)
-
-            # jump up
-            if self.up_pressed:
-                if not self.player.crouching:
-                    self.player.jumping = True
-                    if self.physics_engine.is_on_ground(self.player):
-                        impulse = (0, PLAYER_JUMP_IMPULSE)
-                        self.physics_engine.apply_impulse(self.player, impulse)
-                        ar.play_sound(self.jump_sound, volume=0.4)
-
-            is_on_ground = self.physics_engine.is_on_ground(self.player)
-            # Update player forces based on keys pressed
-            if self.left_pressed and not (self.right_pressed or self.down_pressed):
-                # Create a force to the left. Apply it.
-                if is_on_ground:
-                    force = (-PLAYER_MOVE_FORCE_ON_GROUND, 0)
-                else:
-                    force = (-PLAYER_MOVE_FORCE_IN_AIR, 0)
-                self.physics_engine.apply_force(self.player, force)
-                # Set friction to zero for the player while moving
-                self.physics_engine.set_friction(self.player, 0)
-
-            elif self.right_pressed and not (self.left_pressed or self.down_pressed):
-                # Create a force to the right. Apply it.
-                if is_on_ground:
-                    force = (PLAYER_MOVE_FORCE_ON_GROUND, 0)
-                else:
-                    force = (PLAYER_MOVE_FORCE_IN_AIR, 0)
-                self.physics_engine.apply_force(self.player, force)
-                # Set friction to zero for the player while moving
-                self.physics_engine.set_friction(self.player, 0)
-            else:
-                # Player's feet are not moving. Therefore up the friction so we stop.
-                self.physics_engine.set_friction(self.player, 1.0)
 
     def process_damage(self):
         """
@@ -485,13 +342,13 @@ class GameView(ar.View):
         # if player dies (runs out of health), respawn at the beginning of the level
         if self.player.health <= 0:
             self.update_level = True  # raise this flag to properly restart level
-            self.screen_wipe_rect = Rectangle()
+            self.screen_wipe_rect = Transition()
             self.screen_wipe_rect.setup()
             self.player_teleported = True
             self.physics_engine.set_position(self.player, self.player.spawnpoint)
             self.player.health = 99
 
-    def restart_level(self):
+    def restart_level_toggle(self):
         if self.r_pressed:
             # kill player, trigger level to restart
             self.player.health = 0
@@ -562,14 +419,13 @@ class GameView(ar.View):
         if not self.game_over or not self.paused:
             self.physics_engine.step()
 
-        if self.player.crouching:
-            self.physics_engine.resync_sprites()
-
-        self.handle_key_press()
-
         # handle background music
-        # self.play_music()
-        # self.mute_music()
+        self.play_music()
+
+        # if self.player.crouching:
+        #     self.physics_engine.resync_sprites()
+
+        Controls.handle_control_actions(self)
 
         if self.screen_wipe_rect:  # when the game is transitioning to a new level/restarting a level
             self.screen_wipe_rect.center_x += self.screen_wipe_rect.change_x
@@ -589,7 +445,6 @@ class GameView(ar.View):
         self.cannons_list.update()
 
         self.process_damage()
-        self.restart_level() # check if R key is pressed, restart level if so
         self.track_moving_sprites(delta_time)
 
         if ar.check_for_collision_with_list(self.player, self.keys_list) and not self.update_level:
@@ -602,7 +457,7 @@ class GameView(ar.View):
             self.update_level = True  # raise this flag to properly restart level
             self.level += 1  # switch to next level
 
-            self.screen_wipe_rect = Rectangle()
+            self.screen_wipe_rect = Transition()
             self.screen_wipe_rect.setup()
             self.player_teleported = True
 
@@ -613,7 +468,7 @@ class GameView(ar.View):
         if self.player.bottom <= 0:
             self.update_level = True  # raise this flag to properly restart level
 
-            self.screen_wipe_rect = Rectangle()
+            self.screen_wipe_rect = Transition()
             self.screen_wipe_rect.setup()
 
             self.player_teleported = True
