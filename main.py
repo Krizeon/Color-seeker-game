@@ -59,6 +59,7 @@ class GameView(ar.View):
 
         self.cannon_timer = 0
         self.cannon_timed = False
+        self.current_cannon = None
 
         self.score = 0  # the player score
         self.player = None  # the player object
@@ -245,6 +246,7 @@ class GameView(ar.View):
                                                      layer_name='Cannons',
                                                      scaling=TILE_SCALING,
                                                      hit_box_algorithm="Detailed",
+                                                     hit_box_detail=1,
                                                      use_spatial_hash=True)
 
         self.physics_engine.add_sprite_list(self.wall_list,
@@ -265,7 +267,12 @@ class GameView(ar.View):
         self.physics_engine.add_sprite_list(self.cannons_list,
                                             friction=CANNON_FRICTION,
                                             mass=CANNON_MASS,
+                                            collision_type="wall",
                                             body_type=ar.PymunkPhysicsEngine.DYNAMIC)
+
+        # for cannon in self.cannons_list:
+        #     cannon._hit_box_algorithm = "Detailed"
+        #     cannon.hit_box = [(-64,64),(-44, 64),(-44, 0), (44, 0), (44,64),(64,64),(64,-64),(-64,-64)]
 
     def screen_wipe(self):
         if self.screen_wipe_rect:
@@ -413,15 +420,20 @@ class GameView(ar.View):
             current_cannon_velocities = self.physics_engine.get_physics_object(current_cannon).body.velocity
             velocity_x = current_cannon_velocities[0]
             velocity_y = current_cannon_velocities[1]
-
             # timer for when player is activating cannon
             current_time = int(round(time.time() * 1000))
             if not self.cannon_timed:
+                # logically connect a pressure plate (trigger) with a cannon block
+                if current_cannon.properties["is_trigger"]:
+                    for cannon in self.cannons_list:
+                        if cannon.properties["trigger_code"] == current_cannon.properties["trigger_code"] and \
+                                not cannon.properties["is_trigger"]:
+                            self.current_cannon = cannon
                 self.cannon_timer = current_time + CANNON_BUFFER_TIME
                 self.cannon_timed = True
             if self.cannon_timer - current_time < 0:
                 if velocity_x < CANNON_MAX_HORIZONTAL_SPEED and velocity_y < CANNON_MAX_VERTICAL_SPEED:
-                    self.physics_engine.apply_impulse(current_cannon, (0, CANNON_IMPULSE))
+                    self.physics_engine.apply_impulse(self.current_cannon, (0, CANNON_IMPULSE))
             return
         # if current_cannon and not ar.check_for_collision(self.player, current_cannon):
         #     print("reset")

@@ -1,7 +1,7 @@
 """
 list of all constants used across all game python scripts
 """
-STARTING_LEVEL = 6
+STARTING_LEVEL = 9
 
 # screen size (currently 720p)
 SCREEN_HEIGHT = 720
@@ -70,7 +70,7 @@ ENEMY_FRICTION = 0.9
 WALL_FRICTION = 0.8
 
 # friction of cannon block
-CANNON_FRICTION = 0.82
+CANNON_FRICTION = 0.2
 
 # mass of cannons
 CANNON_MASS = 10
