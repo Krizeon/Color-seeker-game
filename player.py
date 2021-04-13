@@ -1,12 +1,22 @@
 import arcade as ar
 from constants import *
+import numpy as np
 import pymunk
 
 # coordinates to make a circular hitbox for when player is "crouching"
-CIRCLE = [(-30,0), (-28,10),(-20,22),(-10,28),
+CIRCLE2 = [(-30,0), (-28,10),(-20,22),(-10,28),
           (0,30),(10,28),(20,22),(28,10),
           (30,0),(28,-10),(20,-22),(10,-28),
           (0,-30),(-10,-28),(-20,-22),(-28,-10)]
+
+CIRCLE = np.array([(1, 0), (0.966, 0.259), (0.866, 0.5), (0.707, 0.707), (0.5, 0.866), (0.259, 0.966),
+                   (0, 1), (-0.259, 0.966), (-0.5, 0.866), (-0.707, 0.707), (-0.866, 0.5), (-0.966, 0.259),
+                   (-1,0), (-0.966, -0.259), (-0.866, -0.5), (-0.707, -0.707), (-0.5, -0.866), (-0.259, -0.966),
+                   (0,-1), (0.259, -0.966), (0.5, -0.866), (0.707, -0.707), (0.866, -0.5), (0.966, -0.259)
+
+                   ])
+
+CIRCLE_LARGE = list(CIRCLE*30)
 
 # class CircleSprite(ar.Sprite):
 #     def __init__(self, filename, pymunk_shape):
@@ -33,6 +43,7 @@ class PlayerCharacter(ar.Sprite):
         self.color = [0, 0, 0, 0]  # color is RGBA, 4th int being opacity between 0-255
         self.took_damage = False
         self.time_last_hit = 0
+        self.time_last_launched = 0
         self.crouching = False  # is the player crouching?
         self.default_points = [[-40, -60], [40, -60], [40, 50], [-40, 50]]
         self.adjusted_hitbox = False  # this is a "latch", used for handling crouching.
@@ -98,7 +109,7 @@ class PlayerCharacter(ar.Sprite):
         # change to crouching sprite if holding DOWN or S
         if self.crouching:
             self.texture = self.crouching_texture_pair[self.character_face_direction]
-            self.hit_box = CIRCLE
+            self.hit_box = (CIRCLE_LARGE)
 
             # in order to make the player smaller when crouching for the physics engine,
             # remove the player from the physics engine and add it back right away.
@@ -107,7 +118,7 @@ class PlayerCharacter(ar.Sprite):
                 physics_engine.remove_sprite(sprite=self)
                 physics_engine.add_sprite(self, friction=0)
                 self.texture = self.crouching_texture_pair[self.character_face_direction]
-                self.hit_box = CIRCLE
+                self.hit_box = CIRCLE_LARGE
 
                 # remove these hardcoded numbers later (still debugging crouching)
                 self.center_y -= 16

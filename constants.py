@@ -1,7 +1,7 @@
 """
 list of all constants used across all game python scripts
 """
-STARTING_LEVEL = 5
+STARTING_LEVEL = 6
 
 # screen size (currently 720p)
 SCREEN_HEIGHT = 720
@@ -37,6 +37,9 @@ BG_MUSIC_VOLUME = 0.3
 # time in milliseconds until player may take damage again
 DAMAGE_BUFFER_TIME = 1000
 
+# time in milliseconds until player can use cannon
+CANNON_BUFFER_TIME = 500
+
 WINDOW_TITLE = "Cool Game!"
 PLAYER_SPRITE = "sprites/greenguy_walking"
 
@@ -67,7 +70,7 @@ ENEMY_FRICTION = 0.9
 WALL_FRICTION = 0.8
 
 # friction of cannon block
-CANNON_FRICTION = .8
+CANNON_FRICTION = 0.82
 
 # mass of cannons
 CANNON_MASS = 10
@@ -92,10 +95,11 @@ PLAYER_MOVE_FORCE_IN_AIR = 4000
 PLAYER_JUMP_IMPULSE = 2000
 
 # strength of a cannon
-CANNON_IMPULSE = 1800
+CANNON_IMPULSE = 2000
 
 # max cannon speed
 CANNON_MAX_HORIZONTAL_SPEED = 1800
+CANNON_MAX_VERTICAL_SPEED = 800
 
 # boundaries of the viewport box, relative to the screen window's resolution
 VIEWPORT_MARGIN_TOP = 200

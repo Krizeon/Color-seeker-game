@@ -1,11 +1,13 @@
-import time
-
+"""
+Main game driver (run this file to play game!)
+"""
 # all classes and constants from views.py and constants.py are
 # going to be used in this file, so we import all of them!
+import time
 import views
+import fsm
 from constants import *
 from player import *
-from finite_state_machine import StateMachine, transition
 from transition import Transition
 from controls import Controls
 
@@ -54,6 +56,9 @@ class GameView(ar.View):
         self.screen_wipe_rect = None
         self.update_level = False  # flag raised when the blue screen wipe is occurring to load new level
         self.key_colors = {}
+
+        self.cannon_timer = 0
+        self.cannon_timed = False
 
         self.score = 0  # the player score
         self.player = None  # the player object
@@ -402,13 +407,26 @@ class GameView(ar.View):
 
         # cannon launching handling
         # only launch cannon if player is crouching
+        current_cannon = None
         if (ar.check_for_collision_with_list(self.player, self.cannons_list)) and self.player.crouching:
             current_cannon = ar.check_for_collision_with_list(self.player, self.cannons_list)[0]
             current_cannon_velocities = self.physics_engine.get_physics_object(current_cannon).body.velocity
             velocity_x = current_cannon_velocities[0]
             velocity_y = current_cannon_velocities[1]
-            if velocity_x < CANNON_MAX_HORIZONTAL_SPEED:
-                self.physics_engine.apply_impulse(current_cannon, (0, CANNON_IMPULSE))
+
+            # timer for when player is activating cannon
+            current_time = int(round(time.time() * 1000))
+            if not self.cannon_timed:
+                self.cannon_timer = current_time + CANNON_BUFFER_TIME
+                self.cannon_timed = True
+            if self.cannon_timer - current_time < 0:
+                if velocity_x < CANNON_MAX_HORIZONTAL_SPEED and velocity_y < CANNON_MAX_VERTICAL_SPEED:
+                    self.physics_engine.apply_impulse(current_cannon, (0, CANNON_IMPULSE))
+            return
+        # if current_cannon and not ar.check_for_collision(self.player, current_cannon):
+        #     print("reset")
+        self.cannon_timed = False
+
 
     def on_update(self, delta_time: float):
         """
@@ -446,6 +464,7 @@ class GameView(ar.View):
 
         if ar.check_for_collision_with_list(self.player, self.keys_list) and not self.update_level:
             current_key = ar.check_for_collision_with_list(self.player, self.keys_list)[0]
+
             self.load_layer("Hidden Platforms", self.key_colors[current_key])
             self.player.color = self.key_colors[current_key]
 
