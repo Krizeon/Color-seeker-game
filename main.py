@@ -112,7 +112,7 @@ class GameView(ar.View):
 
         # Set up the player
         self.load_level(self.level)
-        self.background = ar.load_texture("backgrounds/background1.png")
+        self.background = ar.load_texture("backgrounds/background1.jpg")
 
         self.player.health = 99
         self.player.color = DEFAULT_COLOR
@@ -422,11 +422,6 @@ class GameView(ar.View):
         # handle background music
         self.play_music()
 
-        # if self.player.crouching:
-        #     self.physics_engine.resync_sprites()
-
-        Controls.handle_control_actions(self)
-
         if self.screen_wipe_rect:  # when the game is transitioning to a new level/restarting a level
             self.screen_wipe_rect.center_x += self.screen_wipe_rect.change_x
             self.screen_wipe_rect.center_y = self.view_bottom + (SCREEN_HEIGHT / 2)
@@ -443,6 +438,8 @@ class GameView(ar.View):
         self.enemies_list.update()
         self.moving_platforms_list.update()
         self.cannons_list.update()
+
+        Controls.handle_control_actions(self)
 
         self.process_damage()
         self.track_moving_sprites(delta_time)
@@ -532,11 +529,10 @@ class GameView(ar.View):
         :return:
         """
         ar.start_render()
-
         # draw the background texture
-        # ar.draw_lrwh_rectangle_textured(0, 0,
-        #                                 self.end_of_map, self.top_of_map,
-        #                                 self.background)
+        ar.draw_lrwh_rectangle_textured(0, 0,
+                                        self.end_of_map, self.top_of_map,
+                                        self.background)
         self.all_sprites.draw()
         self.player_list.draw()
         self.wall_list.draw()
