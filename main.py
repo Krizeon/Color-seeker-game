@@ -176,8 +176,11 @@ class GameView(ar.View):
         self.scenery_list = None
         self.keys_list = None
         self.moving_platforms_list = None
+        self.cannons_list = None
         if self.hidden_platform_list:
             self.hidden_platform_list = None
+        self.current_cannon = None
+        self.cannon_timed = None
         self.key_colors = {}
 
         self.player.color = DEFAULT_COLOR
@@ -412,33 +415,52 @@ class GameView(ar.View):
             # force = (-PLAYER_MOVE_FORCE_ON_GROUND, 0)
             # self.physics_engine.apply_force(enemy_sprite, force)
 
+    def cannon_toggle(self):
+        """
+        handle cannon toggle and launching
+        :return:
+        """
         # cannon launching handling
-        # only launch cannon if player is crouching
-        current_cannon = None
-        if (ar.check_for_collision_with_list(self.player, self.cannons_list)) and self.player.crouching:
+        # only launch cannon if player has touched a "pressure plate" (half slab block, colored white)
+        current_time = 0
+        if (ar.check_for_collision_with_list(self.player, self.cannons_list)):
             current_cannon = ar.check_for_collision_with_list(self.player, self.cannons_list)[0]
-            current_cannon_velocities = self.physics_engine.get_physics_object(current_cannon).body.velocity
-            velocity_x = current_cannon_velocities[0]
-            velocity_y = current_cannon_velocities[1]
-            # timer for when player is activating cannon
-            current_time = int(round(time.time() * 1000))
-            if not self.cannon_timed:
-                # logically connect a pressure plate (trigger) with a cannon block
-                if current_cannon.properties["is_trigger"]:
+            if current_cannon.properties["is_trigger"]:
+                current_cannon.color = ar.color.YELLOW
+                # timer for when player is activating cannon
+                if not self.cannon_timed:
+                    # logically connect a pressure plate (trigger) with a cannon block
                     for cannon in self.cannons_list:
+                        # find the trigger's corresponding cannon by finding its matching trigger code
                         if cannon.properties["trigger_code"] == current_cannon.properties["trigger_code"] and \
                                 not cannon.properties["is_trigger"]:
                             self.current_cannon = cannon
-                self.cannon_timer = current_time + CANNON_BUFFER_TIME
-                self.cannon_timed = True
-            if self.cannon_timer - current_time < 0:
-                if velocity_x < CANNON_MAX_HORIZONTAL_SPEED and velocity_y < CANNON_MAX_VERTICAL_SPEED:
-                    self.physics_engine.apply_impulse(self.current_cannon, (0, CANNON_IMPULSE))
-            return
+                            self.current_cannon.color = ar.color.YELLOW
+                    self.cannon_timer = current_time + CANNON_BUFFER_TIME
+                    self.cannon_timed = True
+
+        current_time = int(round(time.time() * 1000))
+        # do the launching if corresponding pressure plate has been toggled
+        if self.current_cannon and ar.check_for_collision(self.player, self.current_cannon) and \
+                self.cannon_timer - current_time < 0 and self.player.crouching:
+            self.current_cannon.color = ar.color.YELLOW
+            velocities = self.get_object_velocity(current_cannon)
+            velocity_x = velocities[0]
+            velocity_y = velocities[1]
+            if velocity_x < CANNON_MAX_HORIZONTAL_SPEED and velocity_y < CANNON_MAX_VERTICAL_SPEED:
+                self.physics_engine.apply_impulse(self.current_cannon, (0, CANNON_IMPULSE))
+        return
         # if current_cannon and not ar.check_for_collision(self.player, current_cannon):
         #     print("reset")
         self.cannon_timed = False
 
+    def get_object_velocity(self, object):
+        """
+        get object velocities from physics engine
+        :param object: a sprite object in the pymunk physics engine
+        :return: (velocity x, velocity y)
+        """
+        return self.physics_engine.get_physics_object(object).body.velocity
 
     def on_update(self, delta_time: float):
         """
@@ -473,6 +495,7 @@ class GameView(ar.View):
 
         self.process_damage()
         self.track_moving_sprites(delta_time)
+        self.cannon_toggle()
 
         if ar.check_for_collision_with_list(self.player, self.keys_list) and not self.update_level:
             current_key = ar.check_for_collision_with_list(self.player, self.keys_list)[0]
@@ -551,7 +574,6 @@ class GameView(ar.View):
                             SCREEN_WIDTH + self.view_left,
                             self.view_bottom,
                             SCREEN_HEIGHT + self.view_bottom)
-
             self.player_teleported = False
 
     def on_draw(self):

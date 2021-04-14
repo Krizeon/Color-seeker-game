@@ -1,7 +1,7 @@
 """
 list of all constants used across all game python scripts
 """
-STARTING_LEVEL = 9
+STARTING_LEVEL = 8
 
 # screen size (currently 720p)
 SCREEN_HEIGHT = 720
@@ -104,5 +104,5 @@ CANNON_MAX_VERTICAL_SPEED = 800
 # boundaries of the viewport box, relative to the screen window's resolution
 VIEWPORT_MARGIN_TOP = 200
 VIEWPORT_MARGIN_BOTTOM = 200
-VIEWPORT_RIGHT_MARGIN = 500
+VIEWPORT_RIGHT_MARGIN = 700
 VIEWPORT_LEFT_MARGIN = 300
