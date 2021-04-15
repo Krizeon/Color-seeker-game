@@ -1,17 +1,32 @@
 """
 list of all constants used across all game python scripts
 """
-STARTING_LEVEL = 8
+from numpy import array as np
+
+STARTING_LEVEL = 5
 
 # screen size (currently 720p)
 SCREEN_HEIGHT = 720
 SCREEN_WIDTH = 1280
+
+# a 1 pixel-wide circle to be enlarged by multiplying it by a desired number size
+CIRCLE = np([(1, 0), (0.966, 0.259), (0.866, 0.5), (0.707, 0.707), (0.5, 0.866), (0.259, 0.966),
+                   (0, 1), (-0.259, 0.966), (-0.5, 0.866), (-0.707, 0.707), (-0.866, 0.5), (-0.966, 0.259),
+                   (-1,0), (-0.966, -0.259), (-0.866, -0.5), (-0.707, -0.707), (-0.5, -0.866), (-0.259, -0.966),
+                   (0,-1), (0.259, -0.966), (0.5, -0.866), (0.707, -0.707), (0.866, -0.5), (0.966, -0.259)
+                   ])
+
+CIRCLE_LARGE = list(CIRCLE*30)
+
 
 # frame rate of game (60)
 FRAME_RATE = 1/60
 
 # screen window title (working title is used
 SCREEN_TITLE = "Color seeker!"
+
+# angle offset for converting tmx angle to Sprite angles
+ANGLE_OFFSET = 90
 
 # scaling of sprites (mostly the player)
 SPRITE_SCALING = 0.5
@@ -73,12 +88,12 @@ WALL_FRICTION = 0.8
 CANNON_FRICTION = 0.2
 
 # mass of cannons
-CANNON_MASS = 10
+CANNON_MASS = 30
 
 PLAYER_MOVE_FORCE_ON_GROUND = 8000
 ENEMY_MOVE_FORCE_ON_GROUND = 8000
 
-# max x/y speeds
+# max x/setup.py speeds
 PLAYER_MAX_HORIZONTAL_SPEED = 500
 PLAYER_MAX_VERTICAL_SPEED = 1200
 
@@ -95,11 +110,11 @@ PLAYER_MOVE_FORCE_IN_AIR = 4000
 PLAYER_JUMP_IMPULSE = 2000
 
 # strength of a cannon
-CANNON_IMPULSE = 2000
+CANNON_IMPULSE = 3000
 
 # max cannon speed
-CANNON_MAX_HORIZONTAL_SPEED = 1800
-CANNON_MAX_VERTICAL_SPEED = 800
+CANNON_MAX_HORIZONTAL_SPEED = 1300
+CANNON_MAX_VERTICAL_SPEED = 600
 
 # boundaries of the viewport box, relative to the screen window's resolution
 VIEWPORT_MARGIN_TOP = 200

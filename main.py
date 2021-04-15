@@ -438,27 +438,38 @@ class GameView(ar.View):
                             self.current_cannon.color = ar.color.YELLOW
                     self.cannon_timer = current_time + CANNON_BUFFER_TIME
                     self.cannon_timed = True
+                    # teleport back to its original position when cannon is toggled
+                    self.physics_engine.remove_sprite(self.current_cannon)
+                    self.current_cannon.center_x = (self.current_cannon.properties['spawn_x'] * TILE_SCALING) + \
+                                                   (GRID_PIXEL_SIZE / 2)
+                    self.current_cannon.center_y = self.top_of_map - (self.current_cannon.properties['spawn_y'] *
+                                                                      TILE_SCALING) + (GRID_PIXEL_SIZE / 2)
+                    self.current_cannon.angle = -self.current_cannon.properties['spawn_angle']
+                    self.physics_engine.add_sprite(self.current_cannon,
+                                                   friction=CANNON_FRICTION,
+                                                   mass=CANNON_MASS,
+                                                   collision_type="wall",
+                                                   elasticity=0,
+                                                   max_horizontal_velocity=CANNON_MAX_HORIZONTAL_SPEED,
+                                                   max_vertical_velocity=CANNON_MAX_VERTICAL_SPEED,
+                                                   body_type=ar.PymunkPhysicsEngine.DYNAMIC)
 
         current_time = int(round(time.time() * 1000))
         # do the launching if corresponding pressure plate has been toggled
-        if self.current_cannon and ar.check_for_collision(self.player, self.current_cannon) and \
-                self.cannon_timer - current_time < 0 and self.player.crouching:
+        if self.current_cannon and ar.check_for_collision(self.player, self.current_cannon) and self.player.crouching:
             self.current_cannon.color = ar.color.YELLOW
-            velocities = self.get_object_velocity(current_cannon)
-            velocity_x = velocities[0]
-            velocity_y = velocities[1]
-            if velocity_x < CANNON_MAX_HORIZONTAL_SPEED and velocity_y < CANNON_MAX_VERTICAL_SPEED:
-                self.physics_engine.apply_impulse(self.current_cannon, (0, CANNON_IMPULSE))
-        return
-        # if current_cannon and not ar.check_for_collision(self.player, current_cannon):
-        #     print("reset")
+            # if velocity_x < CANNON_MAX_HORIZONTAL_SPEED and velocity_y < CANNON_MAX_VERTICAL_SPEED:
+            self.physics_engine.apply_impulse(self.current_cannon, (0, CANNON_IMPULSE))
+            if self.current_cannon and (self.current_cannon.center_y > self.top_of_map or self.current_cannon.center_x > self.end_of_map):
+                self.physics_engine.remove_sprite(self.current_cannon)
+                print("disappeared!")
         self.cannon_timed = False
 
     def get_object_velocity(self, object):
         """
         get object velocities from physics engine
         :param object: a sprite object in the pymunk physics engine
-        :return: (velocity x, velocity y)
+        :return: (velocity x, velocity setup.py)
         """
         return self.physics_engine.get_physics_object(object).body.velocity
 
@@ -620,7 +631,7 @@ class GameView(ar.View):
         if self.k_pressed:
             self.player.draw_hit_box(RED_COLOR)
 
-            # get player x/y velocity from the physics engine ([x,y])
+            # get player x/setup.py velocity from the physics engine ([x,setup.py])
             player_velocities = self.physics_engine.get_physics_object(self.player).body.velocity
             velocity_x = player_velocities[0]
             velocity_y = player_velocities[1]

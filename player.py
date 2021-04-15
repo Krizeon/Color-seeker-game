@@ -1,6 +1,5 @@
 import arcade as ar
 from constants import *
-import numpy as np
 import pymunk
 
 # coordinates to make a circular hitbox for when player is "crouching"
@@ -9,18 +8,10 @@ CIRCLE2 = [(-30,0), (-28,10),(-20,22),(-10,28),
           (30,0),(28,-10),(20,-22),(10,-28),
           (0,-30),(-10,-28),(-20,-22),(-28,-10)]
 
-CIRCLE = np.array([(1, 0), (0.966, 0.259), (0.866, 0.5), (0.707, 0.707), (0.5, 0.866), (0.259, 0.966),
-                   (0, 1), (-0.259, 0.966), (-0.5, 0.866), (-0.707, 0.707), (-0.866, 0.5), (-0.966, 0.259),
-                   (-1,0), (-0.966, -0.259), (-0.866, -0.5), (-0.707, -0.707), (-0.5, -0.866), (-0.259, -0.966),
-                   (0,-1), (0.259, -0.966), (0.5, -0.866), (0.707, -0.707), (0.866, -0.5), (0.966, -0.259)
-
-                   ])
-
-CIRCLE_LARGE = list(CIRCLE*30)
 
 # class CircleSprite(ar.Sprite):
 #     def __init__(self, filename, pymunk_shape):
-#         super().__init__(filename, center_x=pymunk_shape.body.position.x, center_y=pymunk_shape.body.position.y)
+#         super().__init__(filename, center_x=pymunk_shape.body.position.x, center_y=pymunk_shape.body.position.setup.py)
 #         self.width = pymunk_shape.radius * 2
 #         self.height = pymunk_shape.radius * 2
 #         self.pymunk_shape = pymunk_shape
@@ -89,7 +80,7 @@ class PlayerCharacter(ar.Sprite):
         handle animation when pymunk detects the player is moving
         :param physics_engine: Pymunk physics engine
         :param dx: current x velocity
-        :param dy: current y velocity
+        :param dy: current setup.py velocity
         :param d_angle: current angle
         :return: n/a (used to end function)
         """

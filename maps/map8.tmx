@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.5" tiledversion="1.5.0" orientation="orthogonal" renderorder="right-down" width="32" height="16" tilewidth="128" tileheight="128" infinite="0" nextlayerid="11" nextobjectid="44">
+<map version="1.5" tiledversion="1.5.0" orientation="orthogonal" renderorder="right-down" width="32" height="16" tilewidth="128" tileheight="128" infinite="0" nextlayerid="11" nextobjectid="46">
  <tileset firstgid="1" source="map_tileset.tsx"/>
  <tileset firstgid="257" source="colorful_spritesheet.tsx"/>
  <objectgroup id="4" name="Player Spawn">
   <object id="1" gid="272" x="114.788" y="1912.36" width="128" height="128"/>
  </objectgroup>
- <objectgroup id="3" name="Moving Platforms"/>
+ <objectgroup id="3" name="Moving Platforms">
+  <object id="45" x="1119.92" y="1266.22" width="178.333" height="61.5">
+   <text fontfamily="Fixedsys" pixelsize="20" wrap="1" color="#ffffff">Step on pressure plate to activate cannon below!</text>
+  </object>
+ </objectgroup>
  <objectgroup id="5" name="Cannons">
   <properties>
    <property name="is_trigger" type="bool" value="false"/>
@@ -20,6 +24,9 @@
   <object id="39" gid="5" x="1351.5" y="1804" width="128" height="128" rotation="63">
    <properties>
     <property name="is_trigger" type="bool" value="false"/>
+    <property name="spawn_angle" type="int" value="63"/>
+    <property name="spawn_x" type="int" value="1380"/>
+    <property name="spawn_y" type="int" value="1880"/>
     <property name="trigger_code" type="int" value="1"/>
    </properties>
   </object>
@@ -90,14 +97,10 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1610612737,0,1610612737,0,0,0,0,0,0,0,1610612737,
 0,0,0,0,0,0,2,1,1,17,4,0,0,0,0,0,0,0,0,0,0,1610612737,0,1610612737,0,0,0,0,0,0,0,1610612737,
 0,0,0,0,0,2,2684354564,0,0,0,0,0,0,0,0,3,19,0,0,0,0,1610612737,0,1610612737,0,0,0,0,0,0,0,1610612737,
-0,0,0,0,2,2684354564,0,0,0,0,0,0,0,3,19,18,2684354561,0,0,0,0,1610612737,0,1610612737,0,0,0,0,0,0,0,1610612737,
+0,0,0,0,2,2684354564,0,0,0,0,0,0,0,3,19,18,2684354561,17,0,0,0,1610612737,0,1610612737,0,0,0,0,0,0,0,1610612737,
 0,0,0,0,0,0,0,0,0,1,2684354579,3,19,18,0,0,2684354561,0,0,0,0,0,0,1610612737,0,0,0,0,0,0,0,1610612737,
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1610612737
 </data>
  </layer>
- <objectgroup id="10" name="Special Objects">
-  <object id="43" x="1124.83" y="1296.58" width="178.333" height="61.5">
-   <text fontfamily="Fixedsys" pixelsize="20" wrap="1" color="#ffffff">Step on pressure plate to activate cannon below!</text>
-  </object>
- </objectgroup>
+ <objectgroup id="10" name="Special Objects"/>
 </map>
