@@ -12,14 +12,16 @@ class MenuView(ar.View):
     Displays an Arcade View window to show a menu view
     """
     def on_show(self):
-        ar.set_background_color(ar.color.WHITE)
+        ar.set_background_color(ar.color.GRAY)
 
     def on_draw(self):
         ar.start_render()
-        ar.draw_text("Menu Screen", SCREEN_WIDTH/2, SCREEN_HEIGHT/2,
+        ar.draw_text("Color Seeker!", SCREEN_WIDTH/2, SCREEN_HEIGHT/2,
                          ar.color.BLACK, font_size=50, anchor_x="center")
-        ar.draw_text("Click to advance.", SCREEN_WIDTH/2, SCREEN_HEIGHT/2-75,
-                         ar.color.GRAY, font_size=20, anchor_x="center")
+        ar.draw_text("Arrow keys to move/jump.", SCREEN_WIDTH/2, SCREEN_HEIGHT/2-75,
+                         ar.color.BLACK, font_size=20, anchor_x="center")
+        ar.draw_text("Click to advance.", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 95,
+                     ar.color.BLACK, font_size=20, anchor_x="center")
 
     def on_mouse_press(self, _x, _y, _button, _modifiers):
         game = GameView()
