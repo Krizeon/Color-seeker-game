@@ -52,6 +52,7 @@ class GameView(ar.View):
         self.all_sprites = ar.SpriteList()  # the list of sprites on the screen
         self.keys_list = None
         self.hidden_platform_list = None
+        self.water_list = None
         self.background = None
         self.screen_wipe_rect = None
         self.update_level = False  # flag raised when the blue screen wipe is occurring to load new level
@@ -132,9 +133,11 @@ class GameView(ar.View):
         self.collided = False
         self.collision_timer = 0.0
 
-        # sounds
+        # sound
+        self.orb_touched_sound = ar.load_sound("sounds/orb_get.ogg")
+        self.orb_off_sound = ar.load_sound("sounds/orb_off.ogg")
         self.jump_sound = ar.load_sound("sounds/jump1.wav")
-        self.bg_music = ar.Sound("music/calmsong.ogg", streaming=True)
+        self.bg_music = ar.Sound("music/gamesong2.ogg", streaming=True)
 
     def play_music(self):
         """
@@ -142,7 +145,7 @@ class GameView(ar.View):
         :return:
         """
         if self.bg_music and not self.playing_music:
-            self.bg_music.play(volume=BG_MUSIC_VOLUME)
+            self.bg_music.play(volume=BG_MUSIC_VOLUME, loop=True)
             self.playing_music = True
 
         # fix music loop functionality
@@ -179,6 +182,8 @@ class GameView(ar.View):
         self.cannons_list = None
         if self.hidden_platform_list:
             self.hidden_platform_list = None
+        self.water_list = None
+
         self.current_cannon = None
         self.cannon_timed = None
         self.key_colors = {}
@@ -215,7 +220,7 @@ class GameView(ar.View):
         # handle setting the player spawnpoint
         self.player.spawnpoint = int(player_location[0].center_x), int(player_location[0].center_y)
         self.player.center_x, self.player.center_y = self.player.spawnpoint
-
+        # the player!
         self.physics_engine.add_sprite(self.player,
                                        friction=PLAYER_FRICTION,
                                        mass=PLAYER_MASS,
@@ -223,35 +228,40 @@ class GameView(ar.View):
                                        collision_type="player",
                                        max_horizontal_velocity=PLAYER_MAX_HORIZONTAL_SPEED,
                                        max_vertical_velocity=PLAYER_MAX_VERTICAL_SPEED)
-
+        # walls list
         self.wall_list = ar.tilemap.process_layer(self.current_map,
                                                   layer_name='Foreground',
                                                   scaling=TILE_SCALING,
                                                   use_spatial_hash=False,
                                                   hit_box_algorithm="Detailed")
-
+        # enemies list
         self.enemies_list = ar.tilemap.process_layer(self.current_map,
                                                      layer_name='Enemies',
                                                      scaling=SPRITE_SCALING,
                                                      use_spatial_hash=True)
-
+        # foreground objects list
         self.scenery_list = ar.tilemap.process_layer(self.current_map,
                                                      layer_name='Foreground Objects',
                                                      scaling=TILE_SCALING,
                                                      use_spatial_hash=True)
-
+        # moving platforms list
         self.moving_platforms_list = ar.tilemap.process_layer(self.current_map,
                                                               layer_name='Moving Platforms',
                                                               scaling=TILE_SCALING,
                                                               use_spatial_hash=True)
-
+        # cannons list
         self.cannons_list = ar.tilemap.process_layer(self.current_map,
                                                      layer_name='Cannons',
                                                      scaling=TILE_SCALING,
                                                      hit_box_algorithm="Detailed",
                                                      hit_box_detail=1,
                                                      use_spatial_hash=True)
-
+        # water list
+        self.water_list = ar.tilemap.process_layer(self.current_map,
+                                                     layer_name='Water',
+                                                     scaling=TILE_SCALING,
+                                                     use_spatial_hash=True)
+        # physics engine additions below
         self.physics_engine.add_sprite_list(self.wall_list,
                                             friction=WALL_FRICTION,
                                             collision_type="wall",
@@ -267,11 +277,10 @@ class GameView(ar.View):
                                             body_type=ar.PymunkPhysicsEngine.KINEMATIC,
                                             collision_type="wall")
 
-        self.physics_engine.add_sprite_list(self.cannons_list,
-                                            friction=CANNON_FRICTION,
-                                            mass=CANNON_MASS,
-                                            collision_type="wall",
-                                            body_type=ar.PymunkPhysicsEngine.DYNAMIC)
+        # self.physics_engine.add_sprite_list(self.water_list,
+        #                                     friction=WALL_FRICTION,
+        #                                     collision_type="water",
+        #                                     body_type=ar.PymunkPhysicsEngine.DYNAMIC)
 
         # for cannon in self.cannons_list:
         #     cannon._hit_box_algorithm = "Detailed"
@@ -438,6 +447,7 @@ class GameView(ar.View):
                             self.current_cannon.color = ar.color.YELLOW
                     self.cannon_timer = current_time + CANNON_BUFFER_TIME
                     self.cannon_timed = True
+
                     # teleport back to its original position when cannon is toggled
                     self.physics_engine.remove_sprite(self.current_cannon)
                     self.current_cannon.center_x = (self.current_cannon.properties['spawn_x'] * TILE_SCALING) + \
@@ -458,11 +468,9 @@ class GameView(ar.View):
         # do the launching if corresponding pressure plate has been toggled
         if self.current_cannon and ar.check_for_collision(self.player, self.current_cannon) and self.player.crouching:
             self.current_cannon.color = ar.color.YELLOW
-            # if velocity_x < CANNON_MAX_HORIZONTAL_SPEED and velocity_y < CANNON_MAX_VERTICAL_SPEED:
             self.physics_engine.apply_impulse(self.current_cannon, (0, CANNON_IMPULSE))
             if self.current_cannon and (self.current_cannon.center_y > self.top_of_map or self.current_cannon.center_x > self.end_of_map):
                 self.physics_engine.remove_sprite(self.current_cannon)
-                print("disappeared!")
         self.cannon_timed = False
 
     def get_object_velocity(self, object):
@@ -472,6 +480,19 @@ class GameView(ar.View):
         :return: (velocity x, velocity setup.py)
         """
         return self.physics_engine.get_physics_object(object).body.velocity
+
+    def in_water_physics(self):
+        """
+        handle water physics here
+        :return:
+        """
+        if ar.check_for_collision_with_list(self.player, self.water_list):
+            # print("doing the thing!!")
+            self.player.in_water = True
+            self.physics_engine.apply_force(self.player, (0,BUOYANCY_FORCE))
+            # print(self.player.gravity)
+        else:
+            self.player.in_water = False
 
     def on_update(self, delta_time: float):
         """
@@ -502,17 +523,31 @@ class GameView(ar.View):
         self.moving_platforms_list.update()
         self.cannons_list.update()
 
-        Controls.handle_control_actions(self)
+        if not self.player.in_water:
+            Controls.handle_control_actions(self)
+        else:
+            Controls.handle_water_controls(self)
 
         self.process_damage()
         self.track_moving_sprites(delta_time)
         self.cannon_toggle()
+        self.in_water_physics()
 
         if ar.check_for_collision_with_list(self.player, self.keys_list) and not self.update_level:
             current_key = ar.check_for_collision_with_list(self.player, self.keys_list)[0]
-
-            self.load_layer("Hidden Platforms", self.key_colors[current_key])
-            self.player.color = self.key_colors[current_key]
+            if self.key_colors[current_key] == WHITE:
+                # this if statement is redundant so that we don't immediately enter the else statement below
+                if self.hidden_platform_list:
+                    self.orb_off_sound.play(volume=0.2)
+                    for platform in self.hidden_platform_list:
+                        self.physics_engine.remove_sprite(platform)
+                    self.hidden_platform_list = None
+                self.player.color = WHITE
+            else:
+                if not self.hidden_platform_list:
+                    self.orb_touched_sound.play(volume=0.2)
+                    self.load_layer("Hidden Platforms", self.key_colors[current_key])
+                    self.player.color = self.key_colors[current_key]
 
         # if player gets to the right edge of the level, go to next level
         if self.player.right >= self.end_of_map:
@@ -605,6 +640,7 @@ class GameView(ar.View):
         self.keys_list.draw()
         self.moving_platforms_list.draw()
         self.cannons_list.draw()
+        self.water_list.draw()
 
         if self.hidden_platform_list:
             self.hidden_platform_list.draw()
@@ -619,7 +655,7 @@ class GameView(ar.View):
                 wall.draw_hit_box(RED_COLOR)
             if self.hidden_platform_list:
                 for platform in self.hidden_platform_list:
-                    platform.draw_hitbox(RED_COLOR)
+                    platform.draw_hit_box(RED_COLOR)
             if self.keys_list:
                 for key in self.keys_list:
                     key.draw_hit_box(RED_COLOR)

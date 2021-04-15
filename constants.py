@@ -3,7 +3,7 @@ list of all constants used across all game python scripts
 """
 from numpy import array as np
 
-STARTING_LEVEL = 5
+STARTING_LEVEL = 11
 
 # screen size (currently 720p)
 SCREEN_HEIGHT = 720
@@ -18,6 +18,8 @@ CIRCLE = np([(1, 0), (0.966, 0.259), (0.866, 0.5), (0.707, 0.707), (0.5, 0.866),
 
 CIRCLE_LARGE = list(CIRCLE*30)
 
+# the color white in RGBA
+WHITE = [255,255,255,255]
 
 # frame rate of game (60)
 FRAME_RATE = 1/60
@@ -68,6 +70,9 @@ UPDATES_PER_FRAME = 13  # speed of the player animation
 # gravity affects objects in the world. higher values, faster falling speeds
 GRAVITY = 2800
 
+# force of buoyancy in water
+BUOYANCY_FORCE = 5600
+
 # damping is the percentage of velocity lost per second
 DEFAULT_DAMPING = 1.0
 PLAYER_DAMPING = 0.6
@@ -93,9 +98,15 @@ CANNON_MASS = 30
 PLAYER_MOVE_FORCE_ON_GROUND = 8000
 ENEMY_MOVE_FORCE_ON_GROUND = 8000
 
+# movement in water
+PLAYER_MOVE_FORCE_IN_WATER = 1500
+
 # max x/setup.py speeds
 PLAYER_MAX_HORIZONTAL_SPEED = 500
 PLAYER_MAX_VERTICAL_SPEED = 1200
+
+PLAYER_MAX_HORIZONTAL_SPEED_IN_WATER = 250
+PLAYER_MAX_VERTICAL_SPEED_IN_WATER = 250
 
 # close enough to not-moving to have the animation go to idle.
 DEAD_ZONE = 0.1

@@ -108,6 +108,34 @@ class Controls():
         """
         pass
 
+    def handle_water_controls(self):
+        """
+        handle movement when the player is in water
+        :return:
+        """
+        player_velocity = self.get_object_velocity(self.player)
+        x_vel = player_velocity[0]
+        y_vel = player_velocity[1]
+
+        if abs(y_vel) <= PLAYER_MAX_VERTICAL_SPEED_IN_WATER:
+            if self.down_pressed and not self.up_pressed:
+                impulse = (0, -PLAYER_MOVE_FORCE_IN_WATER)
+                self.physics_engine.apply_force(self.player, impulse)
+
+            elif self.up_pressed and not self.down_pressed:
+                impulse = (0, PLAYER_MOVE_FORCE_IN_WATER)
+                self.physics_engine.apply_force(self.player, impulse)
+
+        if abs(x_vel) <= PLAYER_MAX_HORIZONTAL_SPEED_IN_WATER:
+            if self.right_pressed and not self.left_pressed:
+                impulse = (PLAYER_MOVE_FORCE_IN_WATER, 0)
+                self.physics_engine.apply_force(self.player, impulse)
+
+            elif self.left_pressed and not self.right_pressed:
+                impulse = (-PLAYER_MOVE_FORCE_IN_WATER, 0)
+                self.physics_engine.apply_force(self.player, impulse)
+            # sound.play_sound(self.jump_sound, volume=0.4)
+
     def handle_control_actions(self):
         """
         after the pressing of keys has been abstracted away
@@ -130,7 +158,7 @@ class Controls():
         if not self.screen_wipe_rect:
             # sliding and moving at the same time!
             if self.down_pressed:  # (self.down_pressed and self.right_pressed) or (self.down_pressed and self.left_pressed):
-                if self.physics_engine.is_on_ground(self.player) and not self.player.jumping:
+                if self.physics_engine.is_on_ground(self.player) and not self.player.jumping and not self.player.in_water:
                     self.player.crouching = True
                     # smoothly slide down a hill
                     # self.physics_engine.set_friction(self.player, 0.2)
@@ -145,12 +173,13 @@ class Controls():
                         sound.play_sound(self.jump_sound, volume=0.4)
 
             is_on_ground = self.physics_engine.is_on_ground(self.player)
+            is_in_water = self.player.in_water
             # Update player forces based on keys pressed
             if self.left_pressed and not (self.right_pressed or self.down_pressed):
                 # Create a force to the left. Apply it.
                 if is_on_ground:
                     force = (-PLAYER_MOVE_FORCE_ON_GROUND, 0)
-                else:
+                elif self:
                     force = (-PLAYER_MOVE_FORCE_IN_AIR, 0)
                 self.physics_engine.apply_force(self.player, force)
                 # Set friction to zero for the player while moving

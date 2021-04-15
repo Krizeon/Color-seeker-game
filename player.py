@@ -42,6 +42,8 @@ class PlayerCharacter(ar.Sprite):
         self.collision_radius = 0
         self.angle = 0
 
+        self.in_water = False
+
         self.jumping = False  # is the player jumping?
         self.scale = SPRITE_SCALING
 
@@ -155,7 +157,7 @@ class PlayerCharacter(ar.Sprite):
                 self.cur_texture = 0
             # play a sound effect when the character's foot is touching the ground (5th frame)
             if self.cur_texture // UPDATES_PER_FRAME == 5 and is_on_ground:
-                ar.play_sound(self.footstep_sound, volume=0.2)
+                ar.play_sound(self.footstep_sound, volume=0.1)
             self.texture = self.walking_textures[self.cur_texture // UPDATES_PER_FRAME][self.character_face_direction]
             return
 
