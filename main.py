@@ -253,8 +253,6 @@ class GameView(ar.View):
         self.cannons_list = ar.tilemap.process_layer(self.current_map,
                                                      layer_name='Cannons',
                                                      scaling=TILE_SCALING,
-                                                     hit_box_algorithm="Detailed",
-                                                     hit_box_detail=1,
                                                      use_spatial_hash=True)
         # water list
         self.water_list = ar.tilemap.process_layer(self.current_map,
@@ -277,10 +275,10 @@ class GameView(ar.View):
                                             body_type=ar.PymunkPhysicsEngine.KINEMATIC,
                                             collision_type="wall")
 
-        # self.physics_engine.add_sprite_list(self.water_list,
-        #                                     friction=WALL_FRICTION,
-        #                                     collision_type="water",
-        #                                     body_type=ar.PymunkPhysicsEngine.DYNAMIC)
+        self.physics_engine.add_sprite_list(self.cannons_list,
+                                            friction=WALL_FRICTION,
+                                            collision_type="wall",
+                                            body_type=ar.PymunkPhysicsEngine.DYNAMIC)
 
         # for cannon in self.cannons_list:
         #     cannon._hit_box_algorithm = "Detailed"
@@ -324,6 +322,8 @@ class GameView(ar.View):
         :param modifiers: n/a
         :return: n/a
         """
+        if self.player.in_water:
+            Controls.handle_water_controls(self)
         Controls.handle_key_release(self, key, modifiers)
 
     def on_key_press(self, key: int, modifiers: int):
@@ -334,8 +334,6 @@ class GameView(ar.View):
         :return: n/a
         """
         Controls.handle_key_presses(self, key, modifiers)
-
-
 
     def process_damage(self):
         """
@@ -487,10 +485,8 @@ class GameView(ar.View):
         :return:
         """
         if ar.check_for_collision_with_list(self.player, self.water_list):
-            # print("doing the thing!!")
             self.player.in_water = True
             self.physics_engine.apply_force(self.player, (0,BUOYANCY_FORCE))
-            # print(self.player.gravity)
         else:
             self.player.in_water = False
 
@@ -526,7 +522,7 @@ class GameView(ar.View):
         if not self.player.in_water:
             Controls.handle_control_actions(self)
         else:
-            Controls.handle_water_controls(self)
+            Controls.handle_water_physics(self)
 
         self.process_damage()
         self.track_moving_sprites(delta_time)

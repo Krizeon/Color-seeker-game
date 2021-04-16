@@ -3,7 +3,7 @@ list of all constants used across all game python scripts
 """
 from numpy import array as np
 
-STARTING_LEVEL = 11
+STARTING_LEVEL = 12
 
 # screen size (currently 720p)
 SCREEN_HEIGHT = 720
@@ -71,7 +71,7 @@ UPDATES_PER_FRAME = 13  # speed of the player animation
 GRAVITY = 2800
 
 # force of buoyancy in water
-BUOYANCY_FORCE = 5600
+BUOYANCY_FORCE = 6050
 
 # damping is the percentage of velocity lost per second
 DEFAULT_DAMPING = 1.0
@@ -99,7 +99,13 @@ PLAYER_MOVE_FORCE_ON_GROUND = 8000
 ENEMY_MOVE_FORCE_ON_GROUND = 8000
 
 # movement in water
-PLAYER_MOVE_FORCE_IN_WATER = 1500
+PLAYER_MOVE_FORCE_IN_WATER = 200
+
+# water friction/dampening
+WATER_DAMPENING_FORCE = 400
+
+# player water movement dead zone
+WATER_DEAD_ZONE = 3
 
 # max x/setup.py speeds
 PLAYER_MAX_HORIZONTAL_SPEED = 500
@@ -107,6 +113,8 @@ PLAYER_MAX_VERTICAL_SPEED = 1200
 
 PLAYER_MAX_HORIZONTAL_SPEED_IN_WATER = 250
 PLAYER_MAX_VERTICAL_SPEED_IN_WATER = 250
+
+PLAYER_HEAVY_WATER_DAMPENING = 6000
 
 # close enough to not-moving to have the animation go to idle.
 DEAD_ZONE = 0.1
