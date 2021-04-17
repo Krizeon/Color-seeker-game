@@ -38,6 +38,7 @@ class PlayerCharacter(ar.Sprite):
         self.crouching = False  # is the player crouching?
         self.default_points = [[-40, -60], [40, -60], [40, 50], [-40, 50]]
         self.adjusted_hitbox = False  # this is a "latch", used for handling crouching.
+        self.current_y_velocity = 0
 
         self.collision_radius = 0
         self.angle = 0
@@ -45,6 +46,7 @@ class PlayerCharacter(ar.Sprite):
         self.in_water = False
 
         self.jumping = False  # is the player jumping?
+        self.jumped_max_height = False
         self.scale = SPRITE_SCALING
 
         # How far have we traveled horizontally since changing the texture

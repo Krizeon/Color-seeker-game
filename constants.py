@@ -3,7 +3,7 @@ list of all constants used across all game python scripts
 """
 from numpy import array as np
 
-STARTING_LEVEL = 12
+STARTING_LEVEL = 8
 
 # screen size (currently 720p)
 SCREEN_HEIGHT = 720
@@ -126,7 +126,13 @@ DISTANCE_TO_CHANGE_TEXTURE = 15
 PLAYER_MOVE_FORCE_IN_AIR = 4000
 
 # strength of a jump
-PLAYER_JUMP_IMPULSE = 2000
+PLAYER_JUMP_IMPULSE = 500
+
+# strength of a jump while already in the air
+PLAYER_JUMP_IMPULSE_IN_AIR = 250
+
+# max height of a player's jump (
+PLAYER_MAX_JUMP_VELOCITY = 850
 
 # strength of a cannon
 CANNON_IMPULSE = 3000
