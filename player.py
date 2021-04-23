@@ -66,6 +66,9 @@ class PlayerCharacter(ar.Sprite):
         # add jumping texture
         self.jumping_texture_pair = ar.load_texture_pair(f"{main_path}_jumping.png")
 
+        # add swimming texture
+        self.swimming_texture_pair = ar.load_texture_pair(f"{main_path}_swimming.png")
+
         # add walking sprites to list
         self.walking_textures = []
         for i in range(1, 15):
@@ -81,7 +84,9 @@ class PlayerCharacter(ar.Sprite):
 
     def pymunk_moved(self, physics_engine, dx, dy, d_angle):
         """
-        handle animation when pymunk detects the player is moving
+        Handle animation when Pymunk detects the player is moving
+        Below there is lots of manual configuration of the height of the textures. This is necessary in order to
+        prevent graphical glitches when switching textures.
         :param physics_engine: Pymunk physics engine
         :param dx: current x velocity
         :param dy: current setup.py velocity
@@ -102,9 +107,9 @@ class PlayerCharacter(ar.Sprite):
         self.y_odometer += dy
 
         # change to crouching sprite if holding DOWN or S
-        if self.crouching:
+        if self.crouching and not self.in_water:
             self.texture = self.crouching_texture_pair[self.character_face_direction]
-            self.hit_box = (CIRCLE_LARGE)
+            self.set_hit_box(CIRCLE_LARGE)
 
             # in order to make the player smaller when crouching for the physics engine,
             # remove the player from the physics engine and add it back right away.
@@ -113,18 +118,33 @@ class PlayerCharacter(ar.Sprite):
                 physics_engine.remove_sprite(sprite=self)
                 physics_engine.add_sprite(self, friction=0)
                 self.texture = self.crouching_texture_pair[self.character_face_direction]
-                self.hit_box = CIRCLE_LARGE
+                self.set_hit_box(CIRCLE_LARGE)
 
                 # remove these hardcoded numbers later (still debugging crouching)
-                self.center_y -= 16
-                self.height = 30
-                self.width = 30
-
+                self.center_y -= 20
+                self.height = PLAYER_BALL_RADIUS
+                self.width = PLAYER_BALL_RADIUS
             self.adjusted_hitbox = True
             return
 
+        # handle swimming textures
+        if self.in_water and not is_on_ground and not self.crouching:
+            self.angle = 0
+            self.texture = self.swimming_texture_pair[self.character_face_direction]
+            self.set_hit_box(self.texture.hit_box_points)
+            # print(self.hit_box)
+            self.height = PLAYER_SWIM_HEIGHT
+            self.width = PLAYER_SWIM_WIDTH
+            if self.adjusted_hitbox:
+                physics_engine.remove_sprite(sprite=self)
+                physics_engine.add_sprite(self)
+                self.width = PLAYER_SWIM_WIDTH
+                self.height = PLAYER_SWIM_HEIGHT
+            self.adjusted_hitbox = False
+            return
+
         # idle texture
-        if abs(dx) <= DEAD_ZONE and not self.jumping and not self.crouching:
+        if abs(dx) <= DEAD_ZONE and not self.jumping and not self.crouching and not self.in_water:
             self.angle = 0
             self.texture = self.idle_texture_pair[self.character_face_direction]
             self.set_hit_box(self.texture.hit_box_points)
@@ -138,19 +158,22 @@ class PlayerCharacter(ar.Sprite):
                                           collision_type="player",
                                           max_horizontal_velocity=PLAYER_MAX_HORIZONTAL_SPEED,
                                           max_vertical_velocity=PLAYER_MAX_VERTICAL_SPEED)
-                self.height = 60
-                self.adjusted_hitbox = False
+                self.height = PLAYER_IDLE_HEIGHT
+                self.width = PLAYER_IDLE_WIDTH
+            self.adjusted_hitbox = False
             return
 
         # jumping texture
-        if self.jumping and not self.crouching:
+        if self.jumping and not self.crouching and not self.in_water:
             self.angle = 0
             self.texture = self.jumping_texture_pair[self.character_face_direction]
+            self.height = PLAYER_IDLE_HEIGHT
+            self.width = PLAYER_IDLE_WIDTH
             self.set_hit_box(self.texture.hit_box_points)
             return
 
         # walking animation
-        if abs(self.x_odometer) > DISTANCE_TO_CHANGE_TEXTURE and not self.crouching:
+        if abs(self.x_odometer) > DISTANCE_TO_CHANGE_TEXTURE and not self.crouching and not self.in_water:
             self.angle = 0
             self.x_odometer = 0
             # do the walking animation
@@ -161,14 +184,19 @@ class PlayerCharacter(ar.Sprite):
             if self.cur_texture // UPDATES_PER_FRAME == 5 and is_on_ground:
                 ar.play_sound(self.footstep_sound, volume=0.1)
             self.texture = self.walking_textures[self.cur_texture // UPDATES_PER_FRAME][self.character_face_direction]
+            self.height = PLAYER_IDLE_HEIGHT
+            self.width = PLAYER_IDLE_WIDTH
             return
 
         # if player isn't crouching, set physics shape back to default size
-        if self.adjusted_hitbox and not self.crouching:
-            self.angle = 0
-            self.height = 60
-            self.texture = self.idle_texture_pair[self.character_face_direction]
+        if self.adjusted_hitbox and not self.crouching and not self.in_water and not self.jumping:
+            print("resetting")
             physics_engine.remove_sprite(sprite=self)
+            self.angle = 0
+            self.center_y += 16
+            self.texture = self.idle_texture_pair[self.character_face_direction]
+            self.height = self.texture.height * SPRITE_SCALING
+            self.width = self.texture.width * SPRITE_SCALING
             physics_engine.add_sprite(self,
                                       friction=PLAYER_FRICTION,
                                       mass=PLAYER_MASS,
@@ -178,6 +206,8 @@ class PlayerCharacter(ar.Sprite):
                                       max_vertical_velocity=PLAYER_MAX_VERTICAL_SPEED)
             self.adjusted_hitbox = False
 
+        # self.height = self.texture.height * SPRITE_SCALING
+        # self.width = self.texture.width * SPRITE_SCALING
 
 # class Enemy():
 #     """

@@ -323,6 +323,7 @@ class GameView(ar.View):
         :return: n/a
         """
         if self.player.in_water:
+            # the controls in water should only register when the key is released, unlike regular controls
             Controls.handle_water_controls(self)
         Controls.handle_key_release(self, key, modifiers)
 
@@ -519,9 +520,8 @@ class GameView(ar.View):
         self.moving_platforms_list.update()
         self.cannons_list.update()
 
-        if not self.player.in_water:
-            Controls.handle_control_actions(self)
-        else:
+        Controls.handle_control_actions(self)
+        if self.player.in_water:
             Controls.handle_water_physics(self)
 
         self.process_damage()
@@ -678,6 +678,8 @@ class GameView(ar.View):
             msg7 = self.player.center_x
             msg8 = self.player.center_y
             msg10 = is_on_ground
+            msg11 = self.player.height
+            msg12 = self.player.width
 
             output = f"Map width: {msg:.2f}"
             output2 = f"Is crouching: {msg2}"
@@ -688,6 +690,8 @@ class GameView(ar.View):
             output7 = f"Player X pos?: {msg7:.1f}"
             output8 = f"Player Y pos?: {msg8:.1f}"
             output10 = f"Player on ground?: {msg10}"
+            output11 = f"Player height: {msg11}"
+            output12 = f"Player width: {msg12}"
 
             ar.draw_text(text=output,
                          start_x=self.view_left + 20,
@@ -732,6 +736,16 @@ class GameView(ar.View):
             ar.draw_text(text=output10,
                          start_x=self.view_left + 20,
                          start_y=self.view_bottom + (SCREEN_HEIGHT - 185),
+                         font_size=18,
+                         color=ar.color.WHITE)
+            ar.draw_text(text=output11,
+                         start_x=self.view_left + 20,
+                         start_y=self.view_bottom + (SCREEN_HEIGHT - 205),
+                         font_size=18,
+                         color=ar.color.WHITE)
+            ar.draw_text(text=output12,
+                         start_x=self.view_left + 20,
+                         start_y=self.view_bottom + (SCREEN_HEIGHT - 225),
                          font_size=18,
                          color=ar.color.WHITE)
 

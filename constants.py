@@ -3,7 +3,7 @@ list of all constants used across all game python scripts
 """
 from numpy import array as np
 
-STARTING_LEVEL = 8
+STARTING_LEVEL = 11
 
 # screen size (currently 720p)
 SCREEN_HEIGHT = 720
@@ -133,6 +133,13 @@ PLAYER_JUMP_IMPULSE_IN_AIR = 250
 
 # max height of a player's jump (
 PLAYER_MAX_JUMP_VELOCITY = 850
+
+# constants for player texture height, width, etc
+PLAYER_IDLE_HEIGHT = 120 * SPRITE_SCALING
+PLAYER_IDLE_WIDTH = 60 * SPRITE_SCALING
+PLAYER_SWIM_HEIGHT = 60 * SPRITE_SCALING
+PLAYER_SWIM_WIDTH = 120 * SPRITE_SCALING
+PLAYER_BALL_RADIUS = 60 * SPRITE_SCALING
 
 # strength of a cannon
 CANNON_IMPULSE = 3000
