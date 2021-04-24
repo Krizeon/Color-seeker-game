@@ -173,7 +173,7 @@ class Controls():
             water_counterforce = (WATER_DAMPENING_FORCE, 0)
             self.physics_engine.apply_force(self.player, water_counterforce)
 
-        # apply counterforce on the x plane
+        # apply counterforce on the y plane
         if y_vel >= WATER_DEAD_ZONE:
             water_counterforce = (0, -WATER_DAMPENING_FORCE)
             self.physics_engine.apply_force(self.player, water_counterforce)
@@ -211,6 +211,7 @@ class Controls():
 
                 # jump up
                 player_velocities = self.get_object_velocity(self.player)
+                player_velocity_x = player_velocities[0]
                 player_velocity_y = player_velocities[1]
                 if self.up_pressed:
                     # don't jump when crouching
@@ -219,6 +220,7 @@ class Controls():
                         self.player.current_y_velocity = player_velocity_y
                         if is_on_ground:
                             self.player.jumped_max_height = False
+                            self.physics_engine.set_velocity(self.player, (player_velocity_x, 0))
                             impulse = (0, PLAYER_JUMP_IMPULSE)
                             self.physics_engine.apply_impulse(self.player, impulse)
                             sound.play_sound(self.jump_sound, volume=0.4)

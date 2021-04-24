@@ -476,7 +476,7 @@ class GameView(ar.View):
         """
         get object velocities from physics engine
         :param object: a sprite object in the pymunk physics engine
-        :return: (velocity x, velocity setup.py)
+        :return: (velocity x, velocity y)
         """
         return self.physics_engine.get_physics_object(object).body.velocity
 
