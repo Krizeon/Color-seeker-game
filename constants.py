@@ -3,7 +3,7 @@ list of all constants used across all game python scripts
 """
 from numpy import array as np
 
-STARTING_LEVEL = 4
+STARTING_LEVEL = 5
 
 # screen size (currently 720p)
 SCREEN_HEIGHT = 720

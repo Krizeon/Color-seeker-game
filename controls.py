@@ -6,13 +6,18 @@ from constants import *
 from arcade import key
 from arcade import window_commands as ar
 from arcade import sound
-from arcade import check_for_collision_with_list
-
 
 class Controls():
 
     def __init__(self, *args, **kwargs):
         super.__init__()
+        self.player = self.player
+        self.physics_engine = self.physics_engine
+        self.get_object_velocity = self.get_object_velocity
+        self.bg_music = self.bg_music
+        self.window = self.window
+        self.screen_wipe_rect = self.screen_wipe_rect
+        self.jump_sound = self.jump_sound
 
     def handle_key_presses(self, key_pressed: int, modifiers: int):
         """
@@ -236,14 +241,13 @@ class Controls():
                         and self.player.ball_dash_released and not self.player.crouching:
                     impulse = (BALL_DASH_IMPULSE, 0)
                     self.physics_engine.apply_impulse(self.player, impulse)
-                    # this toggles the animation
-                    self.player.ball_dashing = True
+                    self.player.ball_dashing = True # this toggles the animation
 
                 elif self.left_pressed and self.space_bar_pressed and not self.right_pressed \
                         and self.player.ball_dash_released and not self.player.crouching:
                     impulse = (-BALL_DASH_IMPULSE, 0)
                     self.physics_engine.apply_impulse(self.player, impulse)
-                    self.player.ball_dashing = True
+                    self.player.ball_dashing = True # this toggles the animation
 
                 if self.down_pressed:  # (self.down_pressed and self.right_pressed) or (self.down_pressed and self.left_pressed):
                     if self.physics_engine.is_on_ground(self.player) and not self.player.jumping and \

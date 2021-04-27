@@ -352,8 +352,14 @@ class GameView(ar.View):
                 self.player.change_x = 0
                 self.player.change_y = 0
 
+        # kill enemy that is hit by the player dashing
+        if (not self.player.took_damage) and \
+                (ar.check_for_collision_with_list(self.player, self.enemies_list) and \
+                        self.player.ball_dashing):
+            current_enemy = ar.check_for_collision_with_list(self.player, self.enemies_list)[0]
+            current_enemy.remove_from_sprite_lists()
         # if player hits enemy, deduce health and knock them back
-        if (self.player.took_damage is False) and \
+        elif (not self.player.took_damage) and \
                 (ar.check_for_collision_with_list(self.player, self.enemies_list)):
             self.player.change_x = -5  # bounce player back
             self.player.change_y = 5  # player jumps up a bit

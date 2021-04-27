@@ -1,5 +1,6 @@
 import arcade as ar
 from constants import *
+from random import randint
 
 # coordinates to make a circular hitbox for when player is "crouching"
 CIRCLE2 = [(-30,0), (-28,10),(-20,22),(-10,28),
@@ -38,8 +39,10 @@ class PlayerCharacter(ar.Sprite):
         self.default_points = [[-40, -60], [40, -60], [40, 50], [-40, 50]]
         self.adjusted_hitbox = False  # this is a "latch", used for handling crouching.
         self.current_y_velocity = 0
-        self.ball_dashing = False
+
+        self.ball_dashing = False # do ball dashing when true
         self.ball_dash_released = True # toggle True if player has let go of key combo for dashing
+        self.ball_dash_reset = False
 
         self.collision_radius = 0
         self.angle = 0
@@ -169,14 +172,20 @@ class PlayerCharacter(ar.Sprite):
 
         # do the dashing animation
         if self.ball_dashing and self.ball_dash_released:
+            if not self.ball_dash_reset:
+                self.cur_texture = 0
+                self.ball_dash_reset = True
             self.angle = 0
             self.x_odometer = 0
             # do the walking animation
-            self.cur_texture += 5
+            self.cur_texture += 11
+            self.color = (randint(50,255),randint(50,255),randint(50,255))
             if self.cur_texture >= (11 * UPDATES_PER_FRAME) or (abs(vel[0]) < (50)):
                 self.cur_texture = 0
                 self.ball_dashing = False
                 self.ball_dash_released = False
+                self.ball_dash_reset = False
+                self.color = WHITE
                 # switch textures here
             self.texture = self.dashing_textures[self.cur_texture // UPDATES_PER_FRAME][self.character_face_direction]
             # self.height = PLAYER_IDLE_HEIGHT
