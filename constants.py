@@ -64,7 +64,7 @@ PLAYER_SPRITE = "sprites/greenguy_walking"
 LEFT_FACING = 1
 RIGHT_FACING = 0
 
-UPDATES_PER_FRAME = 13  # speed of the player animation
+UPDATES_PER_FRAME = 14  # speed of the player animation
 
 # physics related constants below
 # gravity affects objects in the world. higher values, faster falling speeds
@@ -133,6 +133,9 @@ PLAYER_JUMP_IMPULSE_IN_AIR = 250
 
 # max height of a player's jump (
 PLAYER_MAX_JUMP_VELOCITY = 850
+
+#force of a orb dash (spacebar+left/right)
+BALL_DASH_IMPULSE = 700
 
 # constants for player texture height, width, etc
 PLAYER_IDLE_HEIGHT = 120 * SPRITE_SCALING

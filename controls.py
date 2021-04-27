@@ -44,6 +44,9 @@ class Controls():
         if key_pressed == key.D or key_pressed == key.RIGHT:
             self.right_pressed = True
 
+        if key_pressed == key.SPACE:
+            self.space_bar_pressed = True
+
         if key_pressed == key.R:
             self.r_pressed = True
 
@@ -88,6 +91,11 @@ class Controls():
             self.up_pressed = False
             self.player.jumped_max_height = True
 
+        # do cool action
+        if key_pressed == key.SPACE:
+            self.space_bar_pressed = False
+            self.player.ball_dash_released = True
+
         # restart the level
         elif key_pressed == key.R:
             self.r_pressed = False
@@ -95,6 +103,7 @@ class Controls():
         # pause the game
         elif key_pressed == key.P:
             self.p_pressed = False
+
 
     def restart_level_toggle(self):
         """
@@ -181,6 +190,22 @@ class Controls():
             water_counterforce = (0, WATER_DAMPENING_FORCE)
             self.physics_engine.apply_force(self.player, water_counterforce)
 
+    def handle_key_combos(self):
+        """
+        handle what to do when a combination of keys are pressed (ex: spacebar + left keys)
+        :return: n/a
+        """
+        # do cool action attributed to pressing the spacebar+left or right keys
+        if self.right_pressed and self.down_pressed and not self.left_pressed and not self.player.jumping:
+            self.crouching = True
+            impulse = (BALL_DASH_IMPULSE, 0)
+            self.physics_engine.apply_impulse(self.player, impulse)
+
+        if self.left_pressed and self.down_pressed and not self.right_pressed and not self.player.jumping:
+            self.crouching = True
+            impulse = (-BALL_DASH_IMPULSE, 0)
+            self.physics_engine.apply_impulse(self.player, impulse)
+
     def handle_control_actions(self):
         """
         after the pressing of keys has been abstracted away
@@ -205,8 +230,24 @@ class Controls():
             is_on_ground = self.physics_engine.is_on_ground(self.player)
             if not self.screen_wipe_rect:
                 # sliding and moving at the same time!
+
+                # do cool action attributed to pressing the down+left or right keys
+                if self.right_pressed and self.space_bar_pressed and not self.left_pressed\
+                        and self.player.ball_dash_released and not self.player.crouching:
+                    impulse = (BALL_DASH_IMPULSE, 0)
+                    self.physics_engine.apply_impulse(self.player, impulse)
+                    # this toggles the animation
+                    self.player.ball_dashing = True
+
+                elif self.left_pressed and self.space_bar_pressed and not self.right_pressed \
+                        and self.player.ball_dash_released and not self.player.crouching:
+                    impulse = (-BALL_DASH_IMPULSE, 0)
+                    self.physics_engine.apply_impulse(self.player, impulse)
+                    self.player.ball_dashing = True
+
                 if self.down_pressed:  # (self.down_pressed and self.right_pressed) or (self.down_pressed and self.left_pressed):
-                    if self.physics_engine.is_on_ground(self.player) and not self.player.jumping and not self.player.in_water:
+                    if self.physics_engine.is_on_ground(self.player) and not self.player.jumping and \
+                            not self.player.in_water and not self.player.ball_dashing:
                         self.player.crouching = True
 
                 # jump up
@@ -233,7 +274,6 @@ class Controls():
                             self.physics_engine.apply_impulse(self.player, impulse)
                         else:
                             self.player.jumped_max_height = True
-
 
                 # Update player forces based on keys pressed
                 if self.left_pressed and not (self.right_pressed or self.down_pressed):

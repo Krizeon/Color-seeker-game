@@ -38,6 +38,8 @@ class PlayerCharacter(ar.Sprite):
         self.default_points = [[-40, -60], [40, -60], [40, 50], [-40, 50]]
         self.adjusted_hitbox = False  # this is a "latch", used for handling crouching.
         self.current_y_velocity = 0
+        self.ball_dashing = False
+        self.ball_dash_released = True # toggle True if player has let go of key combo for dashing
 
         self.collision_radius = 0
         self.angle = 0
@@ -70,9 +72,12 @@ class PlayerCharacter(ar.Sprite):
         for i in range(1, 5):
             texture = ar.load_texture_pair(f"{main_path}_swimming{i}.png")
             self.swimming_textures.append(texture)
-        # self.swimming_texture_pair = ar.load_texture_pair(f"{main_path}_swimming.png")
-        # self.swimming_texture_pair = ar.load_texture_pair(f"{main_path}_swimming2.png")
 
+        # add dashing sprites to list
+        self.dashing_textures = []
+        for i in range(1, 12):
+            texture = ar.load_texture_pair(f"{main_path}_dashing{i}.png")
+            self.dashing_textures.append(texture)
 
         # add walking sprites to list
         self.walking_textures = []
@@ -111,6 +116,8 @@ class PlayerCharacter(ar.Sprite):
         self.x_odometer += dx
         self.y_odometer += dy
 
+        vel = physics_engine.get_physics_object(self).body.velocity
+
         # change to crouching sprite if holding DOWN or S
         if self.crouching and not self.in_water:
             self.texture = self.crouching_texture_pair[self.character_face_direction]
@@ -122,7 +129,6 @@ class PlayerCharacter(ar.Sprite):
             # graphical glitches.
             if not self.adjusted_hitbox:
                 # continue walking momentum when walking then crouching (left/right + down)
-                vel = physics_engine.get_physics_object(self).body.velocity
                 physics_engine.remove_sprite(sprite=self)
                 physics_engine.add_sprite(self,
                                           friction=0)
@@ -159,6 +165,22 @@ class PlayerCharacter(ar.Sprite):
                 self.x_odometer = 0
                 self.y_odometer = 0
                 self.texture = self.swimming_textures[self.cur_texture // UPDATES_PER_FRAME][self.character_face_direction]
+            return
+
+        # do the dashing animation
+        if self.ball_dashing and self.ball_dash_released:
+            self.angle = 0
+            self.x_odometer = 0
+            # do the walking animation
+            self.cur_texture += 5
+            if self.cur_texture >= (11 * UPDATES_PER_FRAME) or (abs(vel[0]) < (50)):
+                self.cur_texture = 0
+                self.ball_dashing = False
+                self.ball_dash_released = False
+                # switch textures here
+            self.texture = self.dashing_textures[self.cur_texture // UPDATES_PER_FRAME][self.character_face_direction]
+            # self.height = PLAYER_IDLE_HEIGHT
+            # self.width = PLAYER_IDLE_WIDTH
             return
 
         # idle texture

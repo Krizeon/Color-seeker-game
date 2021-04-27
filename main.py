@@ -77,6 +77,7 @@ class GameView(ar.View):
         self.right_pressed = False
         self.up_pressed = False
         self.down_pressed = False
+        self.space_bar_pressed = False
         self.escape_pressed = False
         self.p_pressed = False
         self.l_pressed = False
