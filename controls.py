@@ -7,11 +7,17 @@ from arcade import key
 from arcade import window_commands as ar
 from arcade import sound
 
-
 class Controls():
 
     def __init__(self, *args, **kwargs):
         super.__init__()
+        self.player = self.player
+        self.physics_engine = self.physics_engine
+        self.get_object_velocity = self.get_object_velocity
+        self.bg_music = self.bg_music
+        self.window = self.window
+        self.screen_wipe_rect = self.screen_wipe_rect
+        self.jump_sound = self.jump_sound
 
     def handle_key_presses(self, key_pressed: int, modifiers: int):
         """
@@ -43,6 +49,9 @@ class Controls():
         if key_pressed == key.D or key_pressed == key.RIGHT:
             self.right_pressed = True
 
+        if key_pressed == key.SPACE:
+            self.space_bar_pressed = True
+
         if key_pressed == key.R:
             self.r_pressed = True
 
@@ -70,21 +79,27 @@ class Controls():
         :return:
         """
         # move left
-        if key_pressed == key.LEFT or key == key.A:
+        if key_pressed == key.LEFT or key_pressed == key.A:
             self.left_pressed = False
 
         # move right
-        elif key_pressed == key.RIGHT or key == key.D:
+        elif key_pressed == key.RIGHT or key_pressed== key.D:
             self.right_pressed = False
 
         # crouch down
-        elif key_pressed == key.DOWN or key == key.S:
+        elif key_pressed == key.DOWN or key_pressed == key.S:
             self.down_pressed = False
             self.player.crouching = False
 
         # jump up
-        elif key_pressed == key.UP or key == key.W:
+        elif key_pressed == key.UP or key_pressed == key.W:
             self.up_pressed = False
+            self.player.jumped_max_height = True
+
+        # do cool action
+        if key_pressed == key.SPACE:
+            self.space_bar_pressed = False
+            self.player.ball_dash_released = True
 
         # restart the level
         elif key_pressed == key.R:
@@ -93,6 +108,7 @@ class Controls():
         # pause the game
         elif key_pressed == key.P:
             self.p_pressed = False
+
 
     def restart_level_toggle(self):
         """
@@ -107,6 +123,93 @@ class Controls():
         :return:
         """
         pass
+
+    def handle_water_controls(self):
+        """
+        handle movement when the player is in water
+        :return:
+        """
+        player_velocity = self.get_object_velocity(self.player)
+        x_vel = player_velocity[0]
+        y_vel = player_velocity[1]
+
+        if y_vel >= -PLAYER_MAX_VERTICAL_SPEED_IN_WATER:
+            if self.down_pressed and not self.up_pressed:
+                impulse = (0, -PLAYER_MOVE_FORCE_IN_WATER)
+                self.physics_engine.apply_impulse(self.player, impulse)
+
+        if y_vel <= PLAYER_MAX_VERTICAL_SPEED_IN_WATER:
+            if self.up_pressed and not self.down_pressed:
+                impulse = (0, PLAYER_MOVE_FORCE_IN_WATER)
+                self.physics_engine.apply_impulse(self.player, impulse)
+
+        if x_vel <= PLAYER_MAX_HORIZONTAL_SPEED_IN_WATER:
+            if self.right_pressed and not self.left_pressed:
+                impulse = (PLAYER_MOVE_FORCE_IN_WATER, 0)
+                self.physics_engine.apply_impulse(self.player, impulse)
+
+        if x_vel >= -PLAYER_MAX_HORIZONTAL_SPEED_IN_WATER:
+            if self.left_pressed and not self.right_pressed:
+                impulse = (-PLAYER_MOVE_FORCE_IN_WATER, 0)
+                self.physics_engine.apply_impulse(self.player, impulse)
+            # sound.play_sound(self.jump_sound, volume=0.4)
+
+    def handle_water_physics(self):
+        """
+        simulate water physics when the player is in water (apply heavy friction)
+        :return:
+        """
+
+        # the following variables are only available when player is not in water, so disable them
+        self.player.jumping = False
+        self.player.crouching = False
+
+        player_velocity = self.get_object_velocity(self.player)
+        x_vel = player_velocity[0]
+        y_vel = player_velocity[1]
+
+        #apply heavy dampening if the player velocity is very fast
+        if y_vel < -PLAYER_MAX_VERTICAL_SPEED_IN_WATER:
+            water_dampening = (0, PLAYER_HEAVY_WATER_DAMPENING)
+            self.physics_engine.apply_force(self.player, water_dampening)
+        if x_vel > PLAYER_MAX_VERTICAL_SPEED_IN_WATER:
+            water_dampening = (-PLAYER_HEAVY_WATER_DAMPENING, 0)
+            self.physics_engine.apply_force(self.player, water_dampening)
+        elif x_vel < -PLAYER_MAX_VERTICAL_SPEED_IN_WATER:
+            water_dampening = (PLAYER_HEAVY_WATER_DAMPENING, 0)
+            self.physics_engine.apply_force(self.player, water_dampening)
+
+        # apply counterforce on the x plane
+        if x_vel >= WATER_DEAD_ZONE:
+            water_counterforce = (-WATER_DAMPENING_FORCE, 0)
+            self.physics_engine.apply_force(self.player, water_counterforce)
+        elif x_vel <= -WATER_DEAD_ZONE:
+            water_counterforce = (WATER_DAMPENING_FORCE, 0)
+            self.physics_engine.apply_force(self.player, water_counterforce)
+
+        # apply counterforce on the y plane
+        if y_vel >= WATER_DEAD_ZONE:
+            water_counterforce = (0, -WATER_DAMPENING_FORCE)
+            self.physics_engine.apply_force(self.player, water_counterforce)
+        elif y_vel <= -WATER_DEAD_ZONE:
+            water_counterforce = (0, WATER_DAMPENING_FORCE)
+            self.physics_engine.apply_force(self.player, water_counterforce)
+
+    def handle_key_combos(self):
+        """
+        handle what to do when a combination of keys are pressed (ex: spacebar + left keys)
+        :return: n/a
+        """
+        # do cool action attributed to pressing the spacebar+left or right keys
+        if self.right_pressed and self.down_pressed and not self.left_pressed and not self.player.jumping:
+            self.crouching = True
+            impulse = (BALL_DASH_IMPULSE, 0)
+            self.physics_engine.apply_impulse(self.player, impulse)
+
+        if self.left_pressed and self.down_pressed and not self.right_pressed and not self.player.jumping:
+            self.crouching = True
+            impulse = (-BALL_DASH_IMPULSE, 0)
+            self.physics_engine.apply_impulse(self.player, impulse)
 
     def handle_control_actions(self):
         """
@@ -127,44 +230,75 @@ class Controls():
             self.bg_music.stop()
             self.playing_music = False
 
-        if not self.screen_wipe_rect:
-            # sliding and moving at the same time!
-            if self.down_pressed:  # (self.down_pressed and self.right_pressed) or (self.down_pressed and self.left_pressed):
-                if self.physics_engine.is_on_ground(self.player) and not self.player.jumping:
-                    self.player.crouching = True
-                    # smoothly slide down a hill
-                    # self.physics_engine.set_friction(self.player, 0.2)
 
-            # jump up
-            if self.up_pressed:
-                if not self.player.crouching:
-                    self.player.jumping = True
-                    if self.physics_engine.is_on_ground(self.player):
-                        impulse = (0, PLAYER_JUMP_IMPULSE)
-                        self.physics_engine.apply_impulse(self.player, impulse)
-                        sound.play_sound(self.jump_sound, volume=0.4)
-
+        if not self.player.in_water:
             is_on_ground = self.physics_engine.is_on_ground(self.player)
-            # Update player forces based on keys pressed
-            if self.left_pressed and not (self.right_pressed or self.down_pressed):
-                # Create a force to the left. Apply it.
-                if is_on_ground:
-                    force = (-PLAYER_MOVE_FORCE_ON_GROUND, 0)
-                else:
-                    force = (-PLAYER_MOVE_FORCE_IN_AIR, 0)
-                self.physics_engine.apply_force(self.player, force)
-                # Set friction to zero for the player while moving
-                self.physics_engine.set_friction(self.player, 0)
+            if not self.screen_wipe_rect:
+                # sliding and moving at the same time!
 
-            elif self.right_pressed and not (self.left_pressed or self.down_pressed):
-                # Create a force to the right. Apply it.
-                if is_on_ground:
-                    force = (PLAYER_MOVE_FORCE_ON_GROUND, 0)
+                # do cool action attributed to pressing the down+left or right keys
+                if self.right_pressed and self.space_bar_pressed and not self.left_pressed\
+                        and self.player.ball_dash_released and not self.player.crouching:
+                    impulse = (BALL_DASH_IMPULSE, 0)
+                    self.physics_engine.apply_impulse(self.player, impulse)
+                    self.player.ball_dashing = True # this toggles the animation
+
+                elif self.left_pressed and self.space_bar_pressed and not self.right_pressed \
+                        and self.player.ball_dash_released and not self.player.crouching:
+                    impulse = (-BALL_DASH_IMPULSE, 0)
+                    self.physics_engine.apply_impulse(self.player, impulse)
+                    self.player.ball_dashing = True # this toggles the animation
+
+                if self.down_pressed:  # (self.down_pressed and self.right_pressed) or (self.down_pressed and self.left_pressed):
+                    if self.physics_engine.is_on_ground(self.player) and not self.player.jumping and \
+                            not self.player.in_water and not self.player.ball_dashing:
+                        self.player.crouching = True
+
+                # jump up
+                player_velocities = self.get_object_velocity(self.player)
+                player_velocity_x = player_velocities[0]
+                player_velocity_y = player_velocities[1]
+                if self.up_pressed:
+                    # don't jump when crouching
+                    if not self.player.crouching:
+                        self.player.jumping = True
+                        self.player.current_y_velocity = player_velocity_y
+                        if is_on_ground:
+                            self.player.jumped_max_height = False
+                            self.physics_engine.set_velocity(self.player, (player_velocity_x, 0))
+                            impulse = (0, PLAYER_JUMP_IMPULSE)
+                            self.physics_engine.apply_impulse(self.player, impulse)
+                            sound.play_sound(self.jump_sound, volume=0.4)
+                        if not is_on_ground and round(player_velocity_y) == 0:
+                            self.player.jumped_max_height = True
+                        elif not self.player.jumped_max_height and player_velocity_y < PLAYER_MAX_JUMP_VELOCITY:
+                            # apply a smaller force while in the air to make a more realistic jump effect
+                            # also allows for finer degree of control to jumping
+                            impulse = (0, PLAYER_JUMP_IMPULSE_IN_AIR)
+                            self.physics_engine.apply_impulse(self.player, impulse)
+                        else:
+                            self.player.jumped_max_height = True
+
+                # Update player forces based on keys pressed
+                if self.left_pressed and not (self.right_pressed or self.down_pressed):
+                    # Create a force to the left. Apply it.
+                    if is_on_ground:
+                        force = (-PLAYER_MOVE_FORCE_ON_GROUND, 0)
+                    elif self:
+                        force = (-PLAYER_MOVE_FORCE_IN_AIR, 0)
+                    self.physics_engine.apply_force(self.player, force)
+                    # Set friction to zero for the player while moving
+                    self.physics_engine.set_friction(self.player, 0)
+
+                elif self.right_pressed and not (self.left_pressed or self.down_pressed):
+                    # Create a force to the right. Apply it.
+                    if is_on_ground:
+                        force = (PLAYER_MOVE_FORCE_ON_GROUND, 0)
+                    else:
+                        force = (PLAYER_MOVE_FORCE_IN_AIR, 0)
+                    self.physics_engine.apply_force(self.player, force)
+                    # Set friction to zero for the player while moving
+                    self.physics_engine.set_friction(self.player, 0)
                 else:
-                    force = (PLAYER_MOVE_FORCE_IN_AIR, 0)
-                self.physics_engine.apply_force(self.player, force)
-                # Set friction to zero for the player while moving
-                self.physics_engine.set_friction(self.player, 0)
-            else:
-                # Player's feet are not moving. Therefore up the friction so we stop.
-                self.physics_engine.set_friction(self.player, 1.0)
+                    # Player's feet are not moving. Therefore up the friction so we stop.
+                    self.physics_engine.set_friction(self.player, 1.0)

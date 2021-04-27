@@ -18,6 +18,8 @@ CIRCLE = np([(1, 0), (0.966, 0.259), (0.866, 0.5), (0.707, 0.707), (0.5, 0.866),
 
 CIRCLE_LARGE = list(CIRCLE*30)
 
+# the color white in RGBA
+WHITE = [255,255,255,255]
 
 # frame rate of game (60)
 FRAME_RATE = 1/60
@@ -62,11 +64,14 @@ PLAYER_SPRITE = "sprites/greenguy_walking"
 LEFT_FACING = 1
 RIGHT_FACING = 0
 
-UPDATES_PER_FRAME = 13  # speed of the player animation
+UPDATES_PER_FRAME = 14  # speed of the player animation
 
 # physics related constants below
 # gravity affects objects in the world. higher values, faster falling speeds
 GRAVITY = 2800
+
+# force of buoyancy in water
+BUOYANCY_FORCE = 6050
 
 # damping is the percentage of velocity lost per second
 DEFAULT_DAMPING = 1.0
@@ -93,9 +98,23 @@ CANNON_MASS = 30
 PLAYER_MOVE_FORCE_ON_GROUND = 8000
 ENEMY_MOVE_FORCE_ON_GROUND = 8000
 
+# movement in water
+PLAYER_MOVE_FORCE_IN_WATER = 200
+
+# water friction/dampening
+WATER_DAMPENING_FORCE = 400
+
+# player water movement dead zone
+WATER_DEAD_ZONE = 3
+
 # max x/setup.py speeds
 PLAYER_MAX_HORIZONTAL_SPEED = 500
 PLAYER_MAX_VERTICAL_SPEED = 1200
+
+PLAYER_MAX_HORIZONTAL_SPEED_IN_WATER = 250
+PLAYER_MAX_VERTICAL_SPEED_IN_WATER = 250
+
+PLAYER_HEAVY_WATER_DAMPENING = 6000
 
 # close enough to not-moving to have the animation go to idle.
 DEAD_ZONE = 0.1
@@ -107,7 +126,23 @@ DISTANCE_TO_CHANGE_TEXTURE = 15
 PLAYER_MOVE_FORCE_IN_AIR = 4000
 
 # strength of a jump
-PLAYER_JUMP_IMPULSE = 2000
+PLAYER_JUMP_IMPULSE = 500
+
+# strength of a jump while already in the air
+PLAYER_JUMP_IMPULSE_IN_AIR = 250
+
+# max height of a player's jump (
+PLAYER_MAX_JUMP_VELOCITY = 850
+
+#force of a orb dash (spacebar+left/right)
+BALL_DASH_IMPULSE = 700
+
+# constants for player texture height, width, etc
+PLAYER_IDLE_HEIGHT = 120 * SPRITE_SCALING
+PLAYER_IDLE_WIDTH = 60 * SPRITE_SCALING
+PLAYER_SWIM_HEIGHT = 60 * SPRITE_SCALING
+PLAYER_SWIM_WIDTH = 120 * SPRITE_SCALING
+PLAYER_BALL_RADIUS = 60 * SPRITE_SCALING
 
 # strength of a cannon
 CANNON_IMPULSE = 3000

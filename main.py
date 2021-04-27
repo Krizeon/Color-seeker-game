@@ -52,6 +52,7 @@ class GameView(ar.View):
         self.all_sprites = ar.SpriteList()  # the list of sprites on the screen
         self.keys_list = None
         self.hidden_platform_list = None
+        self.water_list = None
         self.background = None
         self.screen_wipe_rect = None
         self.update_level = False  # flag raised when the blue screen wipe is occurring to load new level
@@ -76,6 +77,7 @@ class GameView(ar.View):
         self.right_pressed = False
         self.up_pressed = False
         self.down_pressed = False
+        self.space_bar_pressed = False
         self.escape_pressed = False
         self.p_pressed = False
         self.l_pressed = False
@@ -132,9 +134,11 @@ class GameView(ar.View):
         self.collided = False
         self.collision_timer = 0.0
 
-        # sounds
+        # sound
+        self.orb_touched_sound = ar.load_sound("sounds/orb_get.ogg")
+        self.orb_off_sound = ar.load_sound("sounds/orb_off.ogg")
         self.jump_sound = ar.load_sound("sounds/jump1.wav")
-        self.bg_music = ar.Sound("music/calmsong.ogg", streaming=True)
+        self.bg_music = ar.Sound("music/gamesong2.ogg", streaming=True)
 
     def play_music(self):
         """
@@ -142,7 +146,7 @@ class GameView(ar.View):
         :return:
         """
         if self.bg_music and not self.playing_music:
-            self.bg_music.play(volume=BG_MUSIC_VOLUME)
+            self.bg_music.play(volume=BG_MUSIC_VOLUME, loop=True)
             self.playing_music = True
 
         # fix music loop functionality
@@ -179,6 +183,8 @@ class GameView(ar.View):
         self.cannons_list = None
         if self.hidden_platform_list:
             self.hidden_platform_list = None
+        self.water_list = None
+
         self.current_cannon = None
         self.cannon_timed = None
         self.key_colors = {}
@@ -215,7 +221,7 @@ class GameView(ar.View):
         # handle setting the player spawnpoint
         self.player.spawnpoint = int(player_location[0].center_x), int(player_location[0].center_y)
         self.player.center_x, self.player.center_y = self.player.spawnpoint
-
+        # the player!
         self.physics_engine.add_sprite(self.player,
                                        friction=PLAYER_FRICTION,
                                        mass=PLAYER_MASS,
@@ -223,35 +229,38 @@ class GameView(ar.View):
                                        collision_type="player",
                                        max_horizontal_velocity=PLAYER_MAX_HORIZONTAL_SPEED,
                                        max_vertical_velocity=PLAYER_MAX_VERTICAL_SPEED)
-
+        # walls list
         self.wall_list = ar.tilemap.process_layer(self.current_map,
                                                   layer_name='Foreground',
                                                   scaling=TILE_SCALING,
                                                   use_spatial_hash=False,
                                                   hit_box_algorithm="Detailed")
-
+        # enemies list
         self.enemies_list = ar.tilemap.process_layer(self.current_map,
                                                      layer_name='Enemies',
                                                      scaling=SPRITE_SCALING,
                                                      use_spatial_hash=True)
-
+        # foreground objects list
         self.scenery_list = ar.tilemap.process_layer(self.current_map,
                                                      layer_name='Foreground Objects',
                                                      scaling=TILE_SCALING,
                                                      use_spatial_hash=True)
-
+        # moving platforms list
         self.moving_platforms_list = ar.tilemap.process_layer(self.current_map,
                                                               layer_name='Moving Platforms',
                                                               scaling=TILE_SCALING,
                                                               use_spatial_hash=True)
-
+        # cannons list
         self.cannons_list = ar.tilemap.process_layer(self.current_map,
                                                      layer_name='Cannons',
                                                      scaling=TILE_SCALING,
-                                                     hit_box_algorithm="Detailed",
-                                                     hit_box_detail=1,
                                                      use_spatial_hash=True)
-
+        # water list
+        self.water_list = ar.tilemap.process_layer(self.current_map,
+                                                     layer_name='Water',
+                                                     scaling=TILE_SCALING,
+                                                     use_spatial_hash=True)
+        # physics engine additions below
         self.physics_engine.add_sprite_list(self.wall_list,
                                             friction=WALL_FRICTION,
                                             collision_type="wall",
@@ -268,8 +277,7 @@ class GameView(ar.View):
                                             collision_type="wall")
 
         self.physics_engine.add_sprite_list(self.cannons_list,
-                                            friction=CANNON_FRICTION,
-                                            mass=CANNON_MASS,
+                                            friction=WALL_FRICTION,
                                             collision_type="wall",
                                             body_type=ar.PymunkPhysicsEngine.DYNAMIC)
 
@@ -315,6 +323,9 @@ class GameView(ar.View):
         :param modifiers: n/a
         :return: n/a
         """
+        if self.player.in_water:
+            # the controls in water should only register when the key is released, unlike regular controls
+            Controls.handle_water_controls(self)
         Controls.handle_key_release(self, key, modifiers)
 
     def on_key_press(self, key: int, modifiers: int):
@@ -325,8 +336,6 @@ class GameView(ar.View):
         :return: n/a
         """
         Controls.handle_key_presses(self, key, modifiers)
-
-
 
     def process_damage(self):
         """
@@ -343,8 +352,14 @@ class GameView(ar.View):
                 self.player.change_x = 0
                 self.player.change_y = 0
 
+        # kill enemy that is hit by the player dashing
+        if (not self.player.took_damage) and \
+                (ar.check_for_collision_with_list(self.player, self.enemies_list) and \
+                        self.player.ball_dashing):
+            current_enemy = ar.check_for_collision_with_list(self.player, self.enemies_list)[0]
+            current_enemy.remove_from_sprite_lists()
         # if player hits enemy, deduce health and knock them back
-        if (self.player.took_damage is False) and \
+        elif (not self.player.took_damage) and \
                 (ar.check_for_collision_with_list(self.player, self.enemies_list)):
             self.player.change_x = -5  # bounce player back
             self.player.change_y = 5  # player jumps up a bit
@@ -438,6 +453,7 @@ class GameView(ar.View):
                             self.current_cannon.color = ar.color.YELLOW
                     self.cannon_timer = current_time + CANNON_BUFFER_TIME
                     self.cannon_timed = True
+
                     # teleport back to its original position when cannon is toggled
                     self.physics_engine.remove_sprite(self.current_cannon)
                     self.current_cannon.center_x = (self.current_cannon.properties['spawn_x'] * TILE_SCALING) + \
@@ -458,20 +474,29 @@ class GameView(ar.View):
         # do the launching if corresponding pressure plate has been toggled
         if self.current_cannon and ar.check_for_collision(self.player, self.current_cannon) and self.player.crouching:
             self.current_cannon.color = ar.color.YELLOW
-            # if velocity_x < CANNON_MAX_HORIZONTAL_SPEED and velocity_y < CANNON_MAX_VERTICAL_SPEED:
             self.physics_engine.apply_impulse(self.current_cannon, (0, CANNON_IMPULSE))
             if self.current_cannon and (self.current_cannon.center_y > self.top_of_map or self.current_cannon.center_x > self.end_of_map):
                 self.physics_engine.remove_sprite(self.current_cannon)
-                print("disappeared!")
         self.cannon_timed = False
 
     def get_object_velocity(self, object):
         """
         get object velocities from physics engine
         :param object: a sprite object in the pymunk physics engine
-        :return: (velocity x, velocity setup.py)
+        :return: (velocity x, velocity y)
         """
         return self.physics_engine.get_physics_object(object).body.velocity
+
+    def in_water_physics(self):
+        """
+        handle water physics here
+        :return:
+        """
+        if ar.check_for_collision_with_list(self.player, self.water_list):
+            self.player.in_water = True
+            self.physics_engine.apply_force(self.player, (0,BUOYANCY_FORCE))
+        else:
+            self.player.in_water = False
 
     def on_update(self, delta_time: float):
         """
@@ -503,16 +528,29 @@ class GameView(ar.View):
         self.cannons_list.update()
 
         Controls.handle_control_actions(self)
+        if self.player.in_water:
+            Controls.handle_water_physics(self)
 
         self.process_damage()
         self.track_moving_sprites(delta_time)
         self.cannon_toggle()
+        self.in_water_physics()
 
         if ar.check_for_collision_with_list(self.player, self.keys_list) and not self.update_level:
             current_key = ar.check_for_collision_with_list(self.player, self.keys_list)[0]
-
-            self.load_layer("Hidden Platforms", self.key_colors[current_key])
-            self.player.color = self.key_colors[current_key]
+            if self.key_colors[current_key] == WHITE:
+                # this if statement is redundant so that we don't immediately enter the else statement below
+                if self.hidden_platform_list:
+                    self.orb_off_sound.play(volume=0.2)
+                    for platform in self.hidden_platform_list:
+                        self.physics_engine.remove_sprite(platform)
+                    self.hidden_platform_list = None
+                self.player.color = WHITE
+            else:
+                if not self.hidden_platform_list:
+                    self.orb_touched_sound.play(volume=0.2)
+                    self.load_layer("Hidden Platforms", self.key_colors[current_key])
+                    self.player.color = self.key_colors[current_key]
 
         # if player gets to the right edge of the level, go to next level
         if self.player.right >= self.end_of_map:
@@ -605,6 +643,7 @@ class GameView(ar.View):
         self.keys_list.draw()
         self.moving_platforms_list.draw()
         self.cannons_list.draw()
+        self.water_list.draw()
 
         if self.hidden_platform_list:
             self.hidden_platform_list.draw()
@@ -619,7 +658,7 @@ class GameView(ar.View):
                 wall.draw_hit_box(RED_COLOR)
             if self.hidden_platform_list:
                 for platform in self.hidden_platform_list:
-                    platform.draw_hitbox(RED_COLOR)
+                    platform.draw_hit_box(RED_COLOR)
             if self.keys_list:
                 for key in self.keys_list:
                     key.draw_hit_box(RED_COLOR)
@@ -646,6 +685,8 @@ class GameView(ar.View):
             msg7 = self.player.center_x
             msg8 = self.player.center_y
             msg10 = is_on_ground
+            msg11 = self.player.height
+            msg12 = self.player.width
 
             output = f"Map width: {msg:.2f}"
             output2 = f"Is crouching: {msg2}"
@@ -656,6 +697,8 @@ class GameView(ar.View):
             output7 = f"Player X pos?: {msg7:.1f}"
             output8 = f"Player Y pos?: {msg8:.1f}"
             output10 = f"Player on ground?: {msg10}"
+            output11 = f"Player height: {msg11}"
+            output12 = f"Player width: {msg12}"
 
             ar.draw_text(text=output,
                          start_x=self.view_left + 20,
@@ -700,6 +743,16 @@ class GameView(ar.View):
             ar.draw_text(text=output10,
                          start_x=self.view_left + 20,
                          start_y=self.view_bottom + (SCREEN_HEIGHT - 185),
+                         font_size=18,
+                         color=ar.color.WHITE)
+            ar.draw_text(text=output11,
+                         start_x=self.view_left + 20,
+                         start_y=self.view_bottom + (SCREEN_HEIGHT - 205),
+                         font_size=18,
+                         color=ar.color.WHITE)
+            ar.draw_text(text=output12,
+                         start_x=self.view_left + 20,
+                         start_y=self.view_bottom + (SCREEN_HEIGHT - 225),
                          font_size=18,
                          color=ar.color.WHITE)
 
