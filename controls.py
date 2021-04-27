@@ -71,20 +71,20 @@ class Controls():
         :return:
         """
         # move left
-        if key_pressed == key.LEFT or key == key.A:
+        if key_pressed == key.LEFT or key_pressed == key.A:
             self.left_pressed = False
 
         # move right
-        elif key_pressed == key.RIGHT or key == key.D:
+        elif key_pressed == key.RIGHT or key_pressed== key.D:
             self.right_pressed = False
 
         # crouch down
-        elif key_pressed == key.DOWN or key == key.S:
+        elif key_pressed == key.DOWN or key_pressed == key.S:
             self.down_pressed = False
             self.player.crouching = False
 
         # jump up
-        elif key_pressed == key.UP or key == key.W:
+        elif key_pressed == key.UP or key_pressed == key.W:
             self.up_pressed = False
             self.player.jumped_max_height = True
 
