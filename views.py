@@ -12,16 +12,25 @@ class MenuView(ar.View):
     Displays an Arcade View window to show a menu view
     """
     def on_show(self):
-        ar.set_background_color(ar.color.GRAY)
+        pass
 
     def on_draw(self):
         ar.start_render()
-        ar.draw_text("Color Seeker!", SCREEN_WIDTH/2, SCREEN_HEIGHT/2,
-                         ar.color.BLACK, font_size=50, anchor_x="center")
-        ar.draw_text("Arrow keys to move/jump.", SCREEN_WIDTH/2, SCREEN_HEIGHT/2-75,
-                         ar.color.BLACK, font_size=20, anchor_x="center")
-        ar.draw_text("Click to advance.", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 95,
-                     ar.color.BLACK, font_size=20, anchor_x="center")
+        # load title screen
+        background = ar.load_texture("backgrounds/color_seeker_titlescreen.png")
+        # ar.set_background_color(ar.color.GRAY)
+        ar.draw_lrwh_rectangle_textured(0, 0,
+                                        SCREEN_WIDTH, SCREEN_HEIGHT,
+                                        background)
+
+        ar.draw_text("Left and Right arrow keys to move\nDown key to roll \nUp key to jump \n"
+                     "Space bar + Left/Right to dash and destroy enemies!", 50, 140,
+                         ar.color.WHITE, font_size=32, anchor_x="left")
+
+        ar.draw_text("P to pause game\n"
+                     "R to restart level", 50, 50, ar.color.WHITE, font_size=24)
+
+        ar.draw_text("Click to play!", SCREEN_WIDTH/2, 40, (200,255,255), font_size=60, anchor_x="center")
 
     def on_mouse_press(self, _x, _y, _button, _modifiers):
         game = GameView()
@@ -96,10 +105,17 @@ class PauseView(ar.View):
     def on_draw(self):
         """ Draw this view """
         ar.start_render()
-        ar.draw_text("Game Paused", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2,
-                         ar.color.WHITE, font_size=40, anchor_x="center")
-        ar.draw_text("Press P to resume game", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2-75,
+        ar.draw_text("Game Paused", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2+25,
+                         ar.color.WHITE, font_size=48, anchor_x="center")
+        ar.draw_text("Left and Right arrow keys to move.\nDown key to roll.\nUp key to jump.\n"
+                     "Space bar + Left/Right to dash and destroy enemies!\n"
+                     "R to restart level.\n"
+                     "Swim by repeatedly tapping arrow keys.", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2-125,
+                     ar.color.WHITE, font_size=20, anchor_x="center", align="center")
+
+        ar.draw_text("Press P to resume game", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2-175,
                          ar.color.WHITE, font_size=20, anchor_x="center")
+
 
     def on_key_press(self, symbol: int, modifiers: int):
         """ If the user presses the mouse button, start the game. """
