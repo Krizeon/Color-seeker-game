@@ -94,6 +94,7 @@ class PlayerCharacter(ar.Sprite):
         # load sounds
         self.footstep_sound = ar.load_sound("sounds/footstep.wav")
         self.jump_sound = ar.load_sound("sounds/jump1.wav")
+        self.dash_sound = ar.load_sound(("sounds/dash_whoosh.ogg"))
 
     def pymunk_moved(self, physics_engine, dx, dy, d_angle):
         """
@@ -175,6 +176,7 @@ class PlayerCharacter(ar.Sprite):
             if not self.ball_dash_reset:
                 self.cur_texture = 0
                 self.ball_dash_reset = True
+                ar.play_sound(self.dash_sound, volume=0.4)
             self.angle = 0
             self.x_odometer = 0
             # do the walking animation

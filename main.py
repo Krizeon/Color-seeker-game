@@ -48,6 +48,7 @@ class GameView(ar.View):
         self.scenery_list = None
         self.moving_platforms_list = None
         self.cannons_list = None
+        self.heavy_blocks_list = None
 
         self.all_sprites = ar.SpriteList()  # the list of sprites on the screen
         self.keys_list = None
@@ -253,6 +254,11 @@ class GameView(ar.View):
         # cannons list
         self.cannons_list = ar.tilemap.process_layer(self.current_map,
                                                      layer_name='Cannons',
+                                                     scaling=TILE_SCALING,
+                                                     use_spatial_hash=True)
+        # cannons list
+        self.heavy_blocks_list = ar.tilemap.process_layer(self.current_map,
+                                                     layer_name='Heavy Blocks',
                                                      scaling=TILE_SCALING,
                                                      use_spatial_hash=True)
         # water list

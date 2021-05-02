@@ -1,15 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.5" tiledversion="1.5.0" orientation="orthogonal" renderorder="right-down" width="32" height="16" tilewidth="128" tileheight="128" infinite="0" nextlayerid="11" nextobjectid="46">
+<map version="1.5" tiledversion="1.5.0" orientation="orthogonal" renderorder="right-down" width="32" height="16" tilewidth="128" tileheight="128" infinite="0" nextlayerid="11" nextobjectid="49">
  <tileset firstgid="1" source="map_tileset.tsx"/>
  <tileset firstgid="257" source="colorful_spritesheet.tsx"/>
  <objectgroup id="4" name="Player Spawn">
   <object id="1" gid="272" x="114.788" y="1912.36" width="128" height="128"/>
  </objectgroup>
- <objectgroup id="3" name="Moving Platforms">
-  <object id="45" x="1119.92" y="1266.22" width="178.333" height="61.5">
-   <text fontfamily="Fixedsys" pixelsize="20" wrap="1" color="#ffffff">Step on pressure plate to activate cannon below!</text>
-  </object>
- </objectgroup>
+ <objectgroup id="3" name="Moving Platforms"/>
  <objectgroup id="5" name="Cannons">
   <properties>
    <property name="is_trigger" type="bool" value="false"/>
@@ -40,6 +36,9 @@
    <properties>
     <property name="key_color" type="color" value="#ff00ffff"/>
    </properties>
+  </object>
+  <object id="48" x="1096.83" y="1255.25" width="182.333" height="67.5">
+   <text fontfamily="Fixedsys" pixelsize="20" wrap="1" color="#543dff">Step on pressure plate to activate cannon below!</text>
   </object>
  </objectgroup>
  <layer id="7" name="Hidden Platforms" width="32" height="16">
@@ -102,5 +101,5 @@
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1610612737
 </data>
  </layer>
- <objectgroup id="10" name="Special Objects"/>
+ <objectgroup id="10" name="Heavy Blocks"/>
 </map>

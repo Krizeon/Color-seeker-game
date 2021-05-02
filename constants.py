@@ -3,7 +3,7 @@ list of all constants used across all game python scripts
 """
 from numpy import array as np
 
-STARTING_LEVEL = 5
+STARTING_LEVEL = 4
 
 # screen size (currently 720p)
 SCREEN_HEIGHT = 720
@@ -139,7 +139,7 @@ BALL_DASH_IMPULSE = 700
 
 # constants for player texture height, width, etc
 PLAYER_IDLE_HEIGHT = 120 * SPRITE_SCALING
-PLAYER_IDLE_WIDTH = 60 * SPRITE_SCALING
+PLAYER_IDLE_WIDTH = 64 * SPRITE_SCALING
 PLAYER_SWIM_HEIGHT = 60 * SPRITE_SCALING
 PLAYER_SWIM_WIDTH = 120 * SPRITE_SCALING
 PLAYER_BALL_RADIUS = 60 * SPRITE_SCALING
