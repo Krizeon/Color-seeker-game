@@ -200,6 +200,7 @@ class Controls():
         handle what to do when a combination of keys are pressed (ex: spacebar + left keys)
         :return: n/a
         """
+        is_on_ground = self.physics_engine.is_on_ground(self.player)
         # do cool action attributed to pressing the spacebar+left or right keys
         if self.right_pressed and self.down_pressed and not self.left_pressed and not self.player.jumping:
             self.crouching = True

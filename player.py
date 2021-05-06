@@ -135,6 +135,8 @@ class PlayerCharacter(ar.Sprite):
                 # continue walking momentum when walking then crouching (left/right + down)
                 physics_engine.remove_sprite(sprite=self)
                 physics_engine.add_sprite(self,
+                                          max_vertical_velocity=PLAYER_MAX_VERTICAL_SPEED,
+                                          max_horizontal_velocity=PLAYER_MAX_HORIZONTAL_SPEED_ROLLING,
                                           friction=0)
                 physics_engine.apply_impulse(self, vel)
                 self.texture = self.crouching_texture_pair[self.character_face_direction]

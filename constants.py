@@ -3,7 +3,7 @@ list of all constants used across all game python scripts
 """
 from numpy import array as np
 
-STARTING_LEVEL = 4
+STARTING_LEVEL = 9
 
 # screen size (currently 720p)
 SCREEN_HEIGHT = 720
@@ -110,6 +110,9 @@ WATER_DEAD_ZONE = 3
 # max x/setup.py speeds
 PLAYER_MAX_HORIZONTAL_SPEED = 500
 PLAYER_MAX_VERTICAL_SPEED = 1200
+
+# max x speed while rolling
+PLAYER_MAX_HORIZONTAL_SPEED_ROLLING = 700
 
 PLAYER_MAX_HORIZONTAL_SPEED_IN_WATER = 250
 PLAYER_MAX_VERTICAL_SPEED_IN_WATER = 250
