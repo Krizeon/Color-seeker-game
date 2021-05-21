@@ -239,13 +239,13 @@ class Controls():
 
                 # do cool action attributed to pressing the down+left or right keys
                 if self.right_pressed and self.space_bar_pressed and not self.left_pressed\
-                        and self.player.ball_dash_released and not self.player.crouching:
+                        and self.player.ball_dash_released and not self.player.crouching and is_on_ground:
                     impulse = (BALL_DASH_IMPULSE, 0)
                     self.physics_engine.apply_impulse(self.player, impulse)
                     self.player.ball_dashing = True # this toggles the animation
 
                 elif self.left_pressed and self.space_bar_pressed and not self.right_pressed \
-                        and self.player.ball_dash_released and not self.player.crouching:
+                        and self.player.ball_dash_released and not self.player.crouching and is_on_ground:
                     impulse = (-BALL_DASH_IMPULSE, 0)
                     self.physics_engine.apply_impulse(self.player, impulse)
                     self.player.ball_dashing = True # this toggles the animation

@@ -39,6 +39,7 @@ class PlayerCharacter(ar.Sprite):
         self.default_points = [[-40, -60], [40, -60], [40, 50], [-40, 50]]
         self.adjusted_hitbox = False  # this is a "latch", used for handling crouching.
         self.current_y_velocity = 0
+        self.is_touching_ground = True
 
         self.ball_dashing = False # do ball dashing when true
         self.ball_dash_released = True # toggle True if player has let go of key combo for dashing
@@ -96,6 +97,22 @@ class PlayerCharacter(ar.Sprite):
         self.jump_sound = ar.load_sound("sounds/jump1.wav")
         self.dash_sound = ar.load_sound(("sounds/dash_whoosh.ogg"))
 
+    def is_on_floor(self, physics_engine, dy):
+        """
+        a more elaborate way to detect if the player is really on the physical floor. this is
+        necessary to avoid game-breaking glitches where the player can wall-jump endlessly.
+        How it achieves this: consult with the physics engine if the player is touching a "ground",
+        and then do a seperate check for the player's y velocity (should be
+        :param physics_engine: Pymunk physics engine
+        :param dy: current y velocity
+        :return:
+        """
+        is_on_ground = physics_engine.is_on_ground(self)
+        if is_on_ground and dy == 0:
+            self.is_touching_ground = True
+        else:
+            self.is_touching_ground = False
+
     def pymunk_moved(self, physics_engine, dx, dy, d_angle):
         """
         Handle animation when Pymunk detects the player is moving
@@ -103,7 +120,7 @@ class PlayerCharacter(ar.Sprite):
         prevent graphical glitches when switching textures.
         :param physics_engine: Pymunk physics engine
         :param dx: current x velocity
-        :param dy: current velocity
+        :param dy: current y velocity
         :param d_angle: current angle
         :return: n/a (used to end function)
         """
