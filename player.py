@@ -45,6 +45,12 @@ class PlayerCharacter(ar.Sprite):
         self.ball_dash_released = True # toggle True if player has let go of key combo for dashing
         self.ball_dash_reset = False
 
+        # toggle player's high jump ability (permanent after collecting a specific item)
+        self.hi_jump = False
+
+        # toggle the player's gliding ability (permanent after collecting a specific item)
+        self.glider = False
+
         self.collision_radius = 0
         self.angle = 0
 

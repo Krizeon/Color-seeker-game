@@ -272,6 +272,11 @@ class Controls():
                             sound.play_sound(self.jump_sound, volume=0.4)
                         if not is_on_ground and round(player_velocity_y) == 0:
                             self.player.jumped_max_height = True
+                        # if player has hi-jump enabled, increase the max jump velocity (quick and dirty solution...)
+                        elif not self.player.jumped_max_height and self.player.hi_jump and player_velocity_y < \
+                                (PLAYER_MAX_JUMP_VELOCITY + 300):
+                            impulse = (0, PLAYER_JUMP_IMPULSE_IN_AIR)
+                            self.physics_engine.apply_impulse(self.player, impulse)
                         elif not self.player.jumped_max_height and player_velocity_y < PLAYER_MAX_JUMP_VELOCITY:
                             # apply a smaller force while in the air to make a more realistic jump effect
                             # also allows for finer degree of control to jumping

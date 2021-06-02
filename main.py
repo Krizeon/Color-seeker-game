@@ -49,6 +49,7 @@ class GameView(ar.View):
         self.moving_platforms_list = None
         self.cannons_list = None
         self.heavy_blocks_list = None
+        self.doors_list = None
 
         self.all_sprites = ar.SpriteList()  # the list of sprites on the screen
         self.keys_list = None
@@ -256,16 +257,23 @@ class GameView(ar.View):
                                                      layer_name='Cannons',
                                                      scaling=TILE_SCALING,
                                                      use_spatial_hash=True)
-        # cannons list
+        # heavy blocks list
         self.heavy_blocks_list = ar.tilemap.process_layer(self.current_map,
-                                                     layer_name='Heavy Blocks',
-                                                     scaling=TILE_SCALING,
-                                                     use_spatial_hash=True)
+                                                        layer_name='Heavy Blocks',
+                                                        scaling=TILE_SCALING,
+                                                        use_spatial_hash=True)
         # water list
         self.water_list = ar.tilemap.process_layer(self.current_map,
-                                                     layer_name='Water',
-                                                     scaling=TILE_SCALING,
-                                                     use_spatial_hash=True)
+                                                    layer_name='Water',
+                                                    scaling=TILE_SCALING,
+                                                    use_spatial_hash=True)
+
+        # doors list
+        self.doors_list = ar.tilemap.process_layer(self.current_map,
+                                                   layer_name='Doors',
+                                                   scaling=TILE_SCALING,
+                                                   use_spatial_hash=True)
+
         # physics engine additions below
         self.physics_engine.add_sprite_list(self.wall_list,
                                             friction=WALL_FRICTION,
@@ -286,6 +294,11 @@ class GameView(ar.View):
                                             friction=WALL_FRICTION,
                                             collision_type="wall",
                                             body_type=ar.PymunkPhysicsEngine.DYNAMIC)
+
+        # self.physics_engine.add_sprite_list(self.doors_list,
+        #                                     friction=0,
+        #                                     collision_type="wall",
+        #                                     body_type=ar.PymunkPhysicsEngine.DYNAMIC)
 
         # for cannon in self.cannons_list:
         #     cannon._hit_box_algorithm = "Detailed"
@@ -558,12 +571,18 @@ class GameView(ar.View):
                     self.load_layer("Hidden Platforms", self.key_colors[current_key])
                     self.player.color = self.key_colors[current_key]
 
-        # if player gets to the right edge of the level, go to next level
-        if self.player.right >= self.end_of_map:
+        # if player touches a door block, go to the next level
+        # the level that the player goes to depends on the door's "goto_level" number.
+        # thus, it's possible to go from map4 to map255. the "goto_level" numbers should have no
+        # correlation to how far along the player is in the game as this is now an adventure game.
+        if ar.check_for_collision_with_list(self.player, self.doors_list):
+            current_door = ar.check_for_collision_with_list(self.player, self.doors_list)[0]
+            next_level = current_door.properties["goto_level"]
+            print(next_level)
             self.update_level = True  # raise this flag to properly restart level
-            self.level += 1  # switch to next level
+            self.level = next_level  # switch to next level
 
-            self.screen_wipe_rect = Transition()
+            self.screen_wipe_rect = Transition()  # cue the transition slide
             self.screen_wipe_rect.setup()
             self.player_teleported = True
 
@@ -650,6 +669,7 @@ class GameView(ar.View):
         self.moving_platforms_list.draw()
         self.cannons_list.draw()
         self.water_list.draw()
+        self.doors_list.draw()
 
         if self.hidden_platform_list:
             self.hidden_platform_list.draw()
