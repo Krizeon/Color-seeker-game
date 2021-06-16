@@ -11,6 +11,7 @@ from player import *
 from transition import Transition
 from controls import Controls
 
+
 def convert_hex_to_color(hex_string):
     """
     convert a RGBA hex to int list
@@ -73,6 +74,7 @@ class GameView(ar.View):
         self.top_of_map = 0
         self.player_teleported = False
         self.current_map = None
+        self.spawn_id = 0
 
         # controls
         self.left_pressed = False
@@ -155,7 +157,6 @@ class GameView(ar.View):
         # elif self.bg_music.is_complete():
         #     self.bg_music.play(volume=BG_MUSIC_VOLUME)
 
-
     def add_to_keys_dict(self, key, color):
         """
         adds key color to self.key_colors for future reference
@@ -215,13 +216,17 @@ class GameView(ar.View):
             self.add_to_keys_dict(key, key_color)
 
         # find the player spawnpoint in the .tmx map
-        player_location = ar.tilemap.process_layer(self.current_map,
+        player_spawns = ar.tilemap.process_layer(self.current_map,
                                                    layer_name='Player Spawn',
                                                    scaling=SPRITE_SCALING,
                                                    use_spatial_hash=True)
+        player_location = (0,0)
+        for spawn in player_spawns:
+            if spawn.properties["spawn_id"] == self.spawn_id:
+                player_location = spawn
 
         # handle setting the player spawnpoint
-        self.player.spawnpoint = int(player_location[0].center_x), int(player_location[0].center_y)
+        self.player.spawnpoint = int(player_location.center_x), int(player_location.center_y)
         self.player.center_x, self.player.center_y = self.player.spawnpoint
         # the player!
         self.physics_engine.add_sprite(self.player,
@@ -259,14 +264,14 @@ class GameView(ar.View):
                                                      use_spatial_hash=True)
         # heavy blocks list
         self.heavy_blocks_list = ar.tilemap.process_layer(self.current_map,
-                                                        layer_name='Heavy Blocks',
-                                                        scaling=TILE_SCALING,
-                                                        use_spatial_hash=True)
+                                                          layer_name='Heavy Blocks',
+                                                          scaling=TILE_SCALING,
+                                                          use_spatial_hash=True)
         # water list
         self.water_list = ar.tilemap.process_layer(self.current_map,
-                                                    layer_name='Water',
-                                                    scaling=TILE_SCALING,
-                                                    use_spatial_hash=True)
+                                                   layer_name='Water',
+                                                   scaling=TILE_SCALING,
+                                                   use_spatial_hash=True)
 
         # doors list
         self.doors_list = ar.tilemap.process_layer(self.current_map,
@@ -294,15 +299,6 @@ class GameView(ar.View):
                                             friction=WALL_FRICTION,
                                             collision_type="wall",
                                             body_type=ar.PymunkPhysicsEngine.DYNAMIC)
-
-        # self.physics_engine.add_sprite_list(self.doors_list,
-        #                                     friction=0,
-        #                                     collision_type="wall",
-        #                                     body_type=ar.PymunkPhysicsEngine.DYNAMIC)
-
-        # for cannon in self.cannons_list:
-        #     cannon._hit_box_algorithm = "Detailed"
-        #     cannon.hit_box = [(-64,64),(-44, 64),(-44, 0), (44, 0), (44,64),(64,64),(64,-64),(-64,-64)]
 
     def screen_wipe(self):
         if self.screen_wipe_rect:
@@ -374,7 +370,7 @@ class GameView(ar.View):
         # kill enemy that is hit by the player dashing
         if (not self.player.took_damage) and \
                 (ar.check_for_collision_with_list(self.player, self.enemies_list) and \
-                        self.player.ball_dashing):
+                 self.player.ball_dashing):
             current_enemy = ar.check_for_collision_with_list(self.player, self.enemies_list)[0]
             current_enemy.remove_from_sprite_lists()
         # if player hits enemy, deduce health and knock them back
@@ -494,7 +490,8 @@ class GameView(ar.View):
         if self.current_cannon and ar.check_for_collision(self.player, self.current_cannon) and self.player.crouching:
             self.current_cannon.color = ar.color.YELLOW
             self.physics_engine.apply_impulse(self.current_cannon, (0, CANNON_IMPULSE))
-            if self.current_cannon and (self.current_cannon.center_y > self.top_of_map or self.current_cannon.center_x > self.end_of_map):
+            if self.current_cannon and (
+                    self.current_cannon.center_y > self.top_of_map or self.current_cannon.center_x > self.end_of_map):
                 self.physics_engine.remove_sprite(self.current_cannon)
         self.cannon_timed = False
 
@@ -513,7 +510,7 @@ class GameView(ar.View):
         """
         if ar.check_for_collision_with_list(self.player, self.water_list):
             self.player.in_water = True
-            self.physics_engine.apply_force(self.player, (0,BUOYANCY_FORCE))
+            self.physics_engine.apply_force(self.player, (0, BUOYANCY_FORCE))
         else:
             self.player.in_water = False
 
@@ -528,7 +525,6 @@ class GameView(ar.View):
 
         # handle background music
         self.play_music()
-
         if self.screen_wipe_rect:  # when the game is transitioning to a new level/restarting a level
             self.screen_wipe_rect.center_x += self.screen_wipe_rect.change_x
             self.screen_wipe_rect.center_y = self.view_bottom + (SCREEN_HEIGHT / 2)
@@ -575,10 +571,12 @@ class GameView(ar.View):
         # the level that the player goes to depends on the door's "goto_level" number.
         # thus, it's possible to go from map4 to map255. the "goto_level" numbers should have no
         # correlation to how far along the player is in the game as this is now an adventure game.
+        # note: keep track of level spawn ids! they should not be repeated more than twice between levels.
         if ar.check_for_collision_with_list(self.player, self.doors_list):
             current_door = ar.check_for_collision_with_list(self.player, self.doors_list)[0]
-            next_level = current_door.properties["goto_level"]
-            print(next_level)
+            next_level = current_door.properties["goto_level"]  # get the next level number
+            self.spawn_id = current_door.properties["spawn_id"]  # get the spawn id that corresponds with the next/
+                                                                 # previous level
             self.update_level = True  # raise this flag to properly restart level
             self.level = next_level  # switch to next level
 
@@ -586,7 +584,9 @@ class GameView(ar.View):
             self.screen_wipe_rect.setup()
             self.player_teleported = True
 
+            # stop player movement
             self.physics_engine.set_horizontal_velocity(self.player, 0)
+
             self.physics_engine.set_position(self.player, self.player.spawnpoint)
 
         # if the player hits the bottom of the level, player dies and respawns at the start of the level
@@ -641,9 +641,25 @@ class GameView(ar.View):
                             self.view_bottom,
                             SCREEN_HEIGHT + self.view_bottom)
 
+        # handle the viewport position when the player transitions to a new level
         if self.player_teleported and self.screen_wipe_rect.center_x > SCREEN_WIDTH:
-            self.view_left = 0
-            self.view_bottom = 0
+            self.view_left = 0 + self.player.center_x - VIEWPORT_RIGHT_MARGIN
+            print(self.player.center_x)
+            if self.view_left + SCREEN_WIDTH > self.width * GRID_PIXEL_SIZE:
+                self.view_left = (self.width * GRID_PIXEL_SIZE) - SCREEN_WIDTH
+                print("lefted", self.width * GRID_PIXEL_SIZE)
+            elif self.view_left < 0:
+                self.view_left = 0
+
+            self.view_bottom = 0 + self.player.center_y - VIEWPORT_MARGIN_BOTTOM
+            if self.view_bottom + SCREEN_HEIGHT > self.height * GRID_PIXEL_SIZE:
+                self.view_bottom = (self.height * GRID_PIXEL_SIZE) - SCREEN_HEIGHT
+                print("bottomed", self.height * GRID_PIXEL_SIZE)
+            elif self.view_bottom < 0:
+                self.view_bottom = 0
+
+            print("left: %2d bottom: %2d " % (self.view_left, self.view_bottom))
+
             ar.set_viewport(self.view_left,
                             SCREEN_WIDTH + self.view_left,
                             self.view_bottom,

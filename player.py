@@ -46,7 +46,7 @@ class PlayerCharacter(ar.Sprite):
         self.ball_dash_reset = False
 
         # toggle player's high jump ability (permanent after collecting a specific item)
-        self.hi_jump = False
+        self.hi_jump = True
 
         # toggle the player's gliding ability (permanent after collecting a specific item)
         self.glider = False

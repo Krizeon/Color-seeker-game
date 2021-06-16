@@ -3,7 +3,11 @@
  <tileset firstgid="1" source="map_tileset.tsx"/>
  <tileset firstgid="257" source="colorful_spritesheet.tsx"/>
  <objectgroup id="2" name="Player Spawn">
-  <object id="1" gid="3221225744" x="245.333" y="1772.73" width="128" height="128" rotation="180"/>
+  <object id="1" gid="3221225744" x="245.333" y="1772.73" width="128" height="128" rotation="180">
+   <properties>
+    <property name="spawn_id" type="int" value="10"/>
+   </properties>
+  </object>
  </objectgroup>
  <objectgroup id="3" name="Cannons">
   <properties>
