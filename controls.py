@@ -200,6 +200,7 @@ class Controls():
         handle what to do when a combination of keys are pressed (ex: spacebar + left keys)
         :return: n/a
         """
+        is_on_ground = self.physics_engine.is_on_ground(self.player)
         # do cool action attributed to pressing the spacebar+left or right keys
         if self.right_pressed and self.down_pressed and not self.left_pressed and not self.player.jumping:
             self.crouching = True
@@ -238,13 +239,13 @@ class Controls():
 
                 # do cool action attributed to pressing the down+left or right keys
                 if self.right_pressed and self.space_bar_pressed and not self.left_pressed\
-                        and self.player.ball_dash_released and not self.player.crouching:
+                        and self.player.ball_dash_released and not self.player.crouching and is_on_ground:
                     impulse = (BALL_DASH_IMPULSE, 0)
                     self.physics_engine.apply_impulse(self.player, impulse)
                     self.player.ball_dashing = True # this toggles the animation
 
                 elif self.left_pressed and self.space_bar_pressed and not self.right_pressed \
-                        and self.player.ball_dash_released and not self.player.crouching:
+                        and self.player.ball_dash_released and not self.player.crouching and is_on_ground:
                     impulse = (-BALL_DASH_IMPULSE, 0)
                     self.physics_engine.apply_impulse(self.player, impulse)
                     self.player.ball_dashing = True # this toggles the animation
@@ -271,6 +272,11 @@ class Controls():
                             sound.play_sound(self.jump_sound, volume=0.4)
                         if not is_on_ground and round(player_velocity_y) == 0:
                             self.player.jumped_max_height = True
+                        # if player has hi-jump enabled, increase the max jump velocity (quick and dirty solution...)
+                        elif not self.player.jumped_max_height and self.player.hi_jump and player_velocity_y < \
+                                (PLAYER_MAX_JUMP_VELOCITY + 300):
+                            impulse = (0, PLAYER_JUMP_IMPULSE_IN_AIR)
+                            self.physics_engine.apply_impulse(self.player, impulse)
                         elif not self.player.jumped_max_height and player_velocity_y < PLAYER_MAX_JUMP_VELOCITY:
                             # apply a smaller force while in the air to make a more realistic jump effect
                             # also allows for finer degree of control to jumping
