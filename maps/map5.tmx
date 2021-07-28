@@ -3,6 +3,7 @@
  <tileset firstgid="1" source="map_tileset.tsx"/>
  <tileset firstgid="257" source="enemy1.tsx"/>
  <tileset firstgid="258" source="colorful_spritesheet.tsx"/>
+ <tileset firstgid="274" source="map_tileset_new.tsx"/>
  <objectgroup id="2" name="Enemies">
   <properties>
    <property name="boundary_left" type="int" value="0"/>

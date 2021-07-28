@@ -46,6 +46,7 @@ class GameView(ar.View):
         self.player_list = None
         self.enemies_list = None
         self.wall_list = None  # list of walls that an object can collide with
+        self.midground_list = None
         self.scenery_list = None
         self.moving_platforms_list = None
         self.cannons_list = None
@@ -222,6 +223,9 @@ class GameView(ar.View):
                                                    use_spatial_hash=True)
         player_location = (0,0)
         for spawn in player_spawns:
+            if self.spawn_id < 1:  # handle instance where player doesnt have a correct spawn id
+                player_location = spawn
+                break
             if spawn.properties["spawn_id"] == self.spawn_id:
                 player_location = spawn
 
@@ -252,6 +256,12 @@ class GameView(ar.View):
                                                      layer_name='Foreground Objects',
                                                      scaling=TILE_SCALING,
                                                      use_spatial_hash=True)
+        # middleground objects list
+        self.midground_list = ar.tilemap.process_layer(self.current_map,
+                                                     layer_name='Middleground',
+                                                     scaling=TILE_SCALING,
+                                                     use_spatial_hash=True)
+
         # moving platforms list
         self.moving_platforms_list = ar.tilemap.process_layer(self.current_map,
                                                               layer_name='Moving Platforms',
@@ -676,6 +686,7 @@ class GameView(ar.View):
         ar.draw_lrwh_rectangle_textured(0, 0,
                                         self.end_of_map, self.top_of_map,
                                         self.background)
+        self.midground_list.draw()
         self.all_sprites.draw()
         self.player_list.draw()
         self.wall_list.draw()
