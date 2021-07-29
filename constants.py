@@ -64,7 +64,7 @@ PLAYER_SPRITE = "sprites/greenguy_walking"
 LEFT_FACING = 1
 RIGHT_FACING = 0
 
-UPDATES_PER_FRAME = 14  # speed of the player animation
+UPDATES_PER_FRAME = 8  # speed of the player animation
 
 # physics related constants below
 # gravity affects objects in the world. higher values, faster falling speeds
@@ -81,7 +81,7 @@ PLAYER_DAMPING = 0.6
 PLAYER_FRICTION = 1.0
 
 # mass of the player (higher values means one could push objects much easier)
-PLAYER_MASS = 2.0
+PLAYER_MASS = 1.0
 
 ENEMY_MASS = 10
 ENEMY_FRICTION = 0.9
