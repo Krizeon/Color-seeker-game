@@ -195,6 +195,15 @@ class Controls():
             water_counterforce = (0, WATER_DAMPENING_FORCE)
             self.physics_engine.apply_force(self.player, water_counterforce)
 
+    def handle_player_pushing(self):
+        """
+        handle player pushing a block under the right conditions
+        :return:
+        """
+        if self.right_pressed and self.space_bar_pressed and self.player.current_y_velocity == 0 and self.player.current_x_velocity <= 100:
+            force = (1000, 0)
+            self.physics_engine.apply_force(self.player, force)
+
     def handle_key_combos(self):
         """
         handle what to do when a combination of keys are pressed (ex: spacebar + left keys)
@@ -234,10 +243,11 @@ class Controls():
 
         if not self.player.in_water:
             is_on_ground = self.physics_engine.is_on_ground(self.player)
+            player_velocities = self.get_object_velocity(self.player)
+            player_velocity_x = player_velocities[0]
+            player_velocity_y = player_velocities[1]
             if not self.screen_wipe_rect:
-                # sliding and moving at the same time!
-
-                # do cool action attributed to pressing the down+left or right keys
+                # do dashing movement
                 if self.right_pressed and self.space_bar_pressed and not self.left_pressed\
                         and self.player.ball_dash_released and not self.player.crouching and is_on_ground:
                     impulse = (BALL_DASH_IMPULSE, 0)
@@ -256,9 +266,6 @@ class Controls():
                         self.player.crouching = True
 
                 # jump up
-                player_velocities = self.get_object_velocity(self.player)
-                player_velocity_x = player_velocities[0]
-                player_velocity_y = player_velocities[1]
                 if self.up_pressed:
                     # don't jump when crouching
                     if not self.player.crouching:

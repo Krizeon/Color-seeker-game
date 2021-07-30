@@ -3,7 +3,7 @@ list of all constants used across all game python scripts
 """
 from numpy import array as np
 
-STARTING_LEVEL = 4
+STARTING_LEVEL = 7
 
 # screen size (currently 720p)
 SCREEN_HEIGHT = 720
@@ -83,6 +83,12 @@ PLAYER_FRICTION = 1.0
 # mass of the player (higher values means one could push objects much easier)
 PLAYER_MASS = 2.0
 
+# force applied when player is pushing an object
+PLAYER_PUSH_FORCE = 10000
+
+# velocity limit to player pushing
+PLAYER_PUSH_VELOCITY_LIMIT = 300
+
 ENEMY_MASS = 10
 ENEMY_FRICTION = 0.9
 
@@ -138,7 +144,7 @@ PLAYER_JUMP_IMPULSE_IN_AIR = 250
 PLAYER_MAX_JUMP_VELOCITY = 850
 
 #force of a orb dash (spacebar+left/right)
-BALL_DASH_IMPULSE = 700
+BALL_DASH_IMPULSE = 600
 
 # constants for player texture height, width, etc
 PLAYER_IDLE_HEIGHT = 120 * SPRITE_SCALING

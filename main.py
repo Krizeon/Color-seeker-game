@@ -282,7 +282,8 @@ class GameView(ar.View):
         self.heavy_blocks_list = ar.tilemap.process_layer(self.current_map,
                                                           layer_name='Heavy Blocks',
                                                           scaling=TILE_SCALING,
-                                                          use_spatial_hash=True)
+                                                          use_spatial_hash=True,
+                                                          hit_box_algorithm="Detailed")
         # water list
         self.water_list = ar.tilemap.process_layer(self.current_map,
                                                    layer_name='Water',
@@ -316,14 +317,19 @@ class GameView(ar.View):
                                             collision_type="wall",
                                             body_type=ar.PymunkPhysicsEngine.DYNAMIC)
 
+        self.physics_engine.add_sprite_list(self.heavy_blocks_list,
+                                            friction=1,
+                                            collision_type="wall",
+                                            body_type=ar.PymunkPhysicsEngine.DYNAMIC,
+                                            mass=8)
+
     def screen_wipe(self):
         if self.screen_wipe_rect:
             ar.draw_rectangle_filled(center_x=self.screen_wipe_rect.center_x,
                                      center_y=self.screen_wipe_rect.center_y,
                                      width=self.screen_wipe_rect.width,
                                      height=self.screen_wipe_rect.height,
-                                     color=self.screen_wipe_rect.color
-                                     )
+                                     color=self.screen_wipe_rect.color)
 
     def load_layer(self, layer_name, color):
         """
@@ -565,6 +571,7 @@ class GameView(ar.View):
         self.enemies_list.update()
         self.moving_platforms_list.update()
         self.cannons_list.update()
+        self.heavy_blocks_list.update()
 
         Controls.handle_control_actions(self)
         if self.player.in_water:
@@ -712,6 +719,7 @@ class GameView(ar.View):
         self.keys_list.draw()
         self.coins_list.draw()
         self.moving_platforms_list.draw()
+        self.heavy_blocks_list.draw()
         self.cannons_list.draw()
         self.water_list.draw()
         self.doors_list.draw()

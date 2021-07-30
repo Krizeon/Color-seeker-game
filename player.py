@@ -40,7 +40,9 @@ class PlayerCharacter(ar.Sprite):
         self.default_points = [[-40, -60], [40, -60], [40, 50], [-40, 50]]
         self.adjusted_hitbox = False  # this is a "latch", used for handling crouching.
         self.current_y_velocity = 0
+        self.current_x_velocity = 0
         self.is_touching_ground = True
+        self.is_pushing = False
 
         self.ball_dashing = False # do ball dashing when true
         self.ball_dash_released = True # toggle True if player has let go of key combo for dashing
