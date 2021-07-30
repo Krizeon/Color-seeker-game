@@ -48,6 +48,7 @@ class GameView(ar.View):
         self.wall_list = None  # list of walls that an object can collide with
         self.midground_list = None
         self.scenery_list = None
+        self.coins_list = None
         self.moving_platforms_list = None
         self.cannons_list = None
         self.heavy_blocks_list = None
@@ -207,6 +208,11 @@ class GameView(ar.View):
 
         self.keys_list = ar.tilemap.process_layer(self.current_map,
                                                   layer_name='Color Orbs',
+                                                  scaling=SPRITE_SCALING,
+                                                  use_spatial_hash=True)
+
+        self.coins_list = ar.tilemap.process_layer(self.current_map,
+                                                  layer_name='Coins',
                                                   scaling=SPRITE_SCALING,
                                                   use_spatial_hash=True)
 
@@ -524,6 +530,13 @@ class GameView(ar.View):
         else:
             self.player.in_water = False
 
+    def collect_coin(self):
+        if ar.check_for_collision_with_list(self.player, self.coins_list):
+            current_coin = ar.check_for_collision_with_list(self.player, self.coins_list)[0]
+            current_coin.remove_from_sprite_lists()
+            self.player.coins_count += 1
+
+
     def on_update(self, delta_time: float):
         """
         Update the positions and statuses of all game objects
@@ -547,6 +560,7 @@ class GameView(ar.View):
 
         # Update everything
         self.player_list.update()
+        self.coins_list.update()
         self.all_sprites.update()
         self.enemies_list.update()
         self.moving_platforms_list.update()
@@ -555,6 +569,9 @@ class GameView(ar.View):
         Controls.handle_control_actions(self)
         if self.player.in_water:
             Controls.handle_water_physics(self)
+
+        # handle coin collection
+        self.collect_coin()
 
         self.process_damage()
         self.track_moving_sprites(delta_time)
@@ -693,6 +710,7 @@ class GameView(ar.View):
         self.enemies_list.draw()
         self.scenery_list.draw()
         self.keys_list.draw()
+        self.coins_list.draw()
         self.moving_platforms_list.draw()
         self.cannons_list.draw()
         self.water_list.draw()
@@ -810,12 +828,28 @@ class GameView(ar.View):
                          color=ar.color.WHITE)
 
         msg3 = self.player.health
-        output3 = f"HP: {msg3:.2f}"
+        # draw health bar
+        ar.draw_rectangle_filled(center_x=self.view_left + 105,
+                                 center_y=self.view_bottom + (SCREEN_HEIGHT - 53),
+                                 height=self.player.health,
+                                 width=20,
+                                 tilt_angle=90,
+                                 color=ar.color.GREEN)
+        output3 = f"HP: {msg3}"
         ar.draw_text(text=output3,
                      start_x=self.view_left + 20,
                      start_y=self.view_bottom + (SCREEN_HEIGHT - 65),
                      font_size=18,
                      color=ar.color.WHITE)
+
+        msg13 = self.player.coins_count
+        output13 = f"Coins: {msg13}"
+        ar.draw_text(text=output13,
+                     start_x=self.view_left + SCREEN_WIDTH - 125,
+                     start_y=self.view_bottom + (SCREEN_HEIGHT - 65),
+                     font_size=18,
+                     color=ar.color.WHITE)
+
         if self.screen_wipe_rect:
             msg9 = self.screen_wipe_rect.center_x
             output9 = f"screen wipe x: {msg9:.2f}"

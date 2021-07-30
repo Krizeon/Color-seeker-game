@@ -81,7 +81,7 @@ PLAYER_DAMPING = 0.6
 PLAYER_FRICTION = 1.0
 
 # mass of the player (higher values means one could push objects much easier)
-PLAYER_MASS = 1.0
+PLAYER_MASS = 2.0
 
 ENEMY_MASS = 10
 ENEMY_FRICTION = 0.9
@@ -107,7 +107,7 @@ WATER_DAMPENING_FORCE = 400
 # player water movement dead zone
 WATER_DEAD_ZONE = 3
 
-# max x/setup.py speeds
+# max x/y speeds for player
 PLAYER_MAX_HORIZONTAL_SPEED = 400
 PLAYER_MAX_VERTICAL_SPEED = 1200
 
@@ -134,7 +134,7 @@ PLAYER_JUMP_IMPULSE = 500
 # strength of a jump while already in the air
 PLAYER_JUMP_IMPULSE_IN_AIR = 250
 
-# max height of a player's jump (
+# max height of a player's jump
 PLAYER_MAX_JUMP_VELOCITY = 850
 
 #force of a orb dash (spacebar+left/right)

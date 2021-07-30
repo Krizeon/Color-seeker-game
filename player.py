@@ -30,6 +30,7 @@ class PlayerCharacter(ar.Sprite):
         self.cur_texture = 0
         self.spawnpoint = [0, 0]
         self.health = 0
+        self.coins_count = 0
         self.default_color = [255, 255, 255, 255]
         self.color = [0, 0, 0, 0]  # color is RGBA, 4th int being opacity between 0-255
         self.took_damage = False
@@ -244,7 +245,7 @@ class PlayerCharacter(ar.Sprite):
             self.texture = self.jumping_texture_pair[self.character_face_direction]
             self.height = PLAYER_IDLE_HEIGHT
             self.width = PLAYER_IDLE_WIDTH
-            self.set_hit_box(self.texture.hit_box_points)
+            # self.set_hit_box(self.texture.hit_box_points)
             return
 
         # walking animation

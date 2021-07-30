@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.5" tiledversion="1.7.1" orientation="orthogonal" renderorder="right-down" width="40" height="25" tilewidth="128" tileheight="128" infinite="0" nextlayerid="10" nextobjectid="9">
+<map version="1.5" tiledversion="1.7.1" orientation="orthogonal" renderorder="right-down" width="40" height="25" tilewidth="128" tileheight="128" infinite="0" nextlayerid="10" nextobjectid="10">
  <tileset firstgid="1" source="map_tileset.tsx"/>
  <tileset firstgid="257" source="colorful_spritesheet.tsx"/>
  <tileset firstgid="273" source="map_tileset_new.tsx"/>
@@ -65,11 +65,13 @@
   <object id="4" gid="262" x="4992.5" y="1153" width="128" height="128">
    <properties>
     <property name="goto_level" type="int" value="7"/>
+    <property name="spawn_id" type="int" value="3"/>
    </properties>
   </object>
   <object id="6" gid="262" x="4992" y="1279.5" width="128" height="128">
    <properties>
     <property name="goto_level" type="int" value="7"/>
+    <property name="spawn_id" type="int" value="3"/>
    </properties>
   </object>
   <object id="7" gid="262" x="7.10543e-15" y="768.667" width="128" height="128">
@@ -158,6 +160,11 @@
   <object id="1" gid="272" x="158.342" y="877.651" width="128" height="128">
    <properties>
     <property name="spawn_id" type="int" value="2"/>
+   </properties>
+  </object>
+  <object id="9" gid="272" x="4845.09" y="1254.18" width="128" height="128">
+   <properties>
+    <property name="spawn_id" type="int" value="3"/>
    </properties>
   </object>
  </objectgroup>
