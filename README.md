@@ -13,7 +13,7 @@ Here's a quick screenshot of how it looks as of August 2021:
 ![Color Seeker game screenshot](https://github.com/Krizeon/Color-seeker-game/blob/master/color-seeker-screenshot1.jpg)
 
 Here it is in action:
-![Color Seeker game gif](https://github.com/Krizeon/Color-seeker-game/blob/master/color-seeker-key.gif)
+![Color Seeker game gif](https://github.com/Krizeon/Color-seeker-game/blob/master/gamepreview.gif)
 
 All assets in the screenshot above have been drawn by me in Adobe Photoshop. The player character (in grey) has animations when being controlled via WASD or Arrow keys, most notably a 14-frame walking animation. There are also animations for swimming, dashing, and more! More animations are to come in time for enemy characters as well. Game tile design is still in an iterative phase, so what you see in the screenshot above may be subject to change in the future. There are also non-interactive detail assets also being designed to furnish the game world with more life, such as alien-looking trees and tall grass. 
 
