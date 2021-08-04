@@ -9,8 +9,8 @@ The name "Color Seeker" is a working title. It is a hint to what the gameplay wi
 
 Color Seeker is coded in Python 3.8 primarily using the Arcade module. The structure of the code is Object-Oriented with Player, Window, View and Game objects. The player progresses through levels linearly, getting color keys to activate hidden platforms while avoiding dangerous obstacles. Game levels are designed and created in Tiled using original spritesheets. The main code loads the resulting .tmx levels into the window, where the user can then control the player character. 
 
-Here's a quick screenshot of how it looks as of April 2021:
-![Color Seeker game screenshot](https://github.com/Krizeon/Color-seeker-game/blob/master/gamesnip2.png)
+Here's a quick screenshot of how it looks as of August 2021:
+![Color Seeker game screenshot](https://github.com/Krizeon/Color-seeker-game/blob/master/color-seeker-screenshot1.jpg)
 
 Here it is in action:
 ![Color Seeker game gif](https://github.com/Krizeon/Color-seeker-game/blob/master/color-seeker-key.gif)
